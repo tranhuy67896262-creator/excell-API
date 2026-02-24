@@ -19,6 +19,7 @@ namespace ImportExportExcellApi.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly string _templateFolderName = "Templates";
         private readonly string _baseTemplateName = "Employee_Template_Base.xlsx";
+        private readonly string _releaseTemplateName = "Employee_Template_Release.xlsx";
 
         public ImportExportController(IWebHostEnvironment environment)
         {
@@ -42,6 +43,7 @@ namespace ImportExportExcellApi.Controllers
 
             string templateFolder = Path.Combine(_environment.ContentRootPath, _templateFolderName);
             string baseTemplatePath = Path.Combine(templateFolder, _baseTemplateName);
+            string releaseTemplatePath = Path.Combine(templateFolder, _releaseTemplateName);
 
             if (!System.IO.File.Exists(baseTemplatePath))
             {
@@ -50,6 +52,15 @@ namespace ImportExportExcellApi.Controllers
 
             using (var package = new ExcelPackage(new FileInfo(baseTemplatePath)))
             {
+                // --- BẮT ĐẦU DEEP CLEAN ---
+                // Copy sheet cũ sang sheet tạm để dọn sạch lỗi DataValidation cũ
+                var oldWs = package.Workbook.Worksheets[0];
+                string originalName = oldWs.Name;
+                var ws = package.Workbook.Worksheets.Add(originalName + "_Temp", oldWs);
+                package.Workbook.Worksheets.Delete(oldWs);
+                ws.Name = originalName;
+                // --- KẾT THÚC DEEP CLEAN ---
+
                 string lookupSheetName = "Data_Lookup";
 
                 // Xóa sheet lookup cũ nếu có
@@ -100,7 +111,6 @@ namespace ImportExportExcellApi.Controllers
                 AddOrReplaceNamedRange(package.Workbook, "DanhSachTrainingMethodName", lookupWs.Cells["M2:M1000"]);
 
                 // === 3. ÁP DỤNG DROPDOWN CHO SHEET CHÍNH ===
-                var ws = package.Workbook.Worksheets[0];
                 int startRow = 6;
                 int endRow = 100;
 
@@ -142,11 +152,11 @@ namespace ImportExportExcellApi.Controllers
                 dataRange.Style.Border.Top.Style = dataRange.Style.Border.Bottom.Style =
                 dataRange.Style.Border.Left.Style = dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
 
-                // === 8. LƯU FILE BASE ===
-                package.Save();
+                // === 8. LƯU FILE RELEASE (Không ghi đè file Base) ===
+                package.SaveAs(new FileInfo(releaseTemplatePath));
             }
 
-            return Ok(new { message = "✅ Base Template đã sẵn sàng", path = baseTemplatePath });
+            return Ok(new { message = "✅ Release Template đã sẵn sàng", path = releaseTemplatePath });
         }
 
         // ========================================
@@ -158,14 +168,14 @@ namespace ImportExportExcellApi.Controllers
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
             string templateFolder = Path.Combine(_environment.ContentRootPath, _templateFolderName);
-            string baseTemplatePath = Path.Combine(templateFolder, _baseTemplateName);
+            string releaseTemplatePath = Path.Combine(templateFolder, _releaseTemplateName);
 
-            if (!System.IO.File.Exists(baseTemplatePath))
+            if (!System.IO.File.Exists(releaseTemplatePath))
             {
-                return NotFound(new { message = $"Không tìm thấy file Base Template tại: {baseTemplatePath}" });
+                return BadRequest(new { message = "Chưa có file Release Template. Hãy chạy gen-release-file trước." });
             }
 
-            using (var package = new ExcelPackage(new FileInfo(baseTemplatePath)))
+            using (var package = new ExcelPackage(new FileInfo(releaseTemplatePath)))
             {
                 var lookupWs = package.Workbook.Worksheets.FirstOrDefault(w => w.Name == "Data_Lookup");
                 if (lookupWs == null)
