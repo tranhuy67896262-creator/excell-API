@@ -56,10 +56,12 @@ namespace ImportExportExcellApi.Data
                 new SysOtherList { Id = 31, Name = "Loại bằng cấp/Chứng chỉ 1" ,TypeCode = "CERTIFICATE_TYPE"},
                 new SysOtherList { Id = 311, Name = "Loại bằng cấp/Chứng chỉ 2" ,TypeCode = "CERTIFICATE_TYPE"},
                 new SysOtherList { Id = 312, Name = "Loại bằng cấp/Chứng chỉ 3" ,TypeCode = "CERTIFICATE_TYPE"},
-                new SysOtherList { Id = 32, Name = "Trình độ chuyên môn" ,TypeCode = "LEVEL_ID"},
                 new SysOtherList { Id = 33, Name = "Hình thức đào tạo" ,TypeCode = "TRAINING_METHOD"},
-                new SysOtherList { Id = 34, Name = "Bộ phận Sản xuất" },
-                new SysOtherList { Id = 35, Name = "Bộ phận Kinh doanh" }
+                new SysOtherList { Id = 134, Name = "Đơn vị đào tạo 1",TypeCode= "GRADUATE_SCHOOL" },
+                new SysOtherList { Id = 234, Name = "Đơn vị đào tạo 2",TypeCode= "GRADUATE_SCHOOL" },
+                new SysOtherList { Id = 42, Name = "Trình độ chuyên môn 1" ,TypeCode = "LEVEL_ID"},
+                new SysOtherList { Id = 43, Name = "Trình độ chuyên môn 2" ,TypeCode = "LEVEL_ID"},
+                new SysOtherList { Id = 44, Name = "Trình độ chuyên môn 3" ,TypeCode = "LEVEL_ID"},
             });
 
             // 4. Init dữ liệu cho Allowance (Giả định class này vẫn tồn tại để tránh lỗi)

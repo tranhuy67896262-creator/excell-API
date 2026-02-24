@@ -69,7 +69,9 @@ namespace ImportExportExcellApi.Controllers
                 lookupWs.Cells[1, 4].Value = "CERT_NAME";
                 lookupWs.Cells[1, 5].Value = "CERT_ID";
                 lookupWs.Cells[1, 6].Value = "YES_NO";
-                lookupWs.Cells[1, 1, 1, 6].Style.Font.Bold = true;
+                lookupWs.Cells[1, 7].Value = "GRAD_SCHOOL_NAME";
+                lookupWs.Cells[1, 8].Value = "GRAD_SCHOOL_ID";
+                lookupWs.Cells[1, 1, 1, 8].Style.Font.Bold = true;
 
                 // Đổ dữ liệu Employee
                 var lookupData = AppDataContext.Employees
@@ -103,6 +105,18 @@ namespace ImportExportExcellApi.Controllers
                 lookupWs.Cells[2, 6].Value = "Có";
                 lookupWs.Cells[3, 6].Value = "Không";
 
+                // ✅ Đổ dữ liệu Đơn vị đào tạo (GRADUATE_SCHOOL)
+                var graduateSchools = AppDataContext.SysOtherLists
+                    .Where(s => s.TypeCode == "GRADUATE_SCHOOL")
+                    .OrderBy(s => s.Name)
+                    .ToList();
+
+                for (int i = 0; i < graduateSchools.Count; i++)
+                {
+                    lookupWs.Cells[i + 2, 7].Value = graduateSchools[i].Name; // Tên hiển thị
+                    lookupWs.Cells[i + 2, 8].Value = graduateSchools[i].Id;   // ID ẩn
+                }
+
                 // Tạo Named Ranges
                 package.Workbook.Names.Add("DanhSachNhanVien", lookupWs.Cells[$"A2:B{lookupData.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachCodeId", lookupWs.Cells[$"A2:C{lookupData.Count + 1}"]);
@@ -110,6 +124,10 @@ namespace ImportExportExcellApi.Controllers
                 package.Workbook.Names.Add("DanhSachChungChi", lookupWs.Cells[$"D2:E{certificateTypes.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachChungChiName", lookupWs.Cells[$"D2:D{certificateTypes.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachCoKhong", lookupWs.Cells[$"F2:F3"]);
+
+                // ✅ Named Range cho Đơn vị đào tạo
+                package.Workbook.Names.Add("DanhSachDonViDaoTao", lookupWs.Cells[$"G2:H{graduateSchools.Count + 1}"]);
+                package.Workbook.Names.Add("DanhSachDonViDaoTaoName", lookupWs.Cells[$"G2:G{graduateSchools.Count + 1}"]);
 
                 // ========================================
                 // 2. XỬ LÝ SHEET CHÍNH
@@ -124,14 +142,14 @@ namespace ImportExportExcellApi.Controllers
                 // ✅ Dropdown Cột C (3): Loại bằng cấp/Chứng chỉ
                 ApplyDropdown(ws, startRow, endRow, 3, "DanhSachChungChiName");
 
-                // ✅ Dropdown Cột D (4): Là bằng chính? ["Có", "Không"] 🎯
+                // ✅ Dropdown Cột D (4): Là bằng chính? ["Có", "Không"]
                 ApplyDropdown(ws, startRow, endRow, 4, "DanhSachCoKhong");
 
-                // ✅ Dropdown Cột F (6): Bộ phận (nếu có)
-                if (ws.Workbook.Names.Any(n => n.Name.Equals("DanhSachBoPhan", StringComparison.OrdinalIgnoreCase)))
-                {
-                    ApplyDropdown(ws, startRow, endRow, 6, "DanhSachBoPhan");
-                }
+                // ✅ Cột E (5): Tên bằng cấp/Chứng chỉ - TEXT INPUT (không dropdown)
+                // User nhập tay
+
+                // ✅ Dropdown Cột F (6): Đơn vị đào tạo 🎯
+                ApplyDropdown(ws, startRow, endRow, 6, "DanhSachDonViDaoTaoName");
 
                 // ✅ Công thức cho các cột
                 for (int row = startRow; row <= endRow; row++)
@@ -147,15 +165,19 @@ namespace ImportExportExcellApi.Controllers
                     // Cột AA (27): Hidden CertificateTypeId
                     string certIdFormula = $"=IF(C{row}=\"\", \"\", VLOOKUP(C{row}, DanhSachChungChi, 2, FALSE))";
                     ws.Cells[row, 27].Formula = certIdFormula;
+
+                    // ✅ Cột AB (28): Hidden GraduateSchoolId - VLOOKUP từ tên trường (cột F)
+                    string schoolIdFormula = $"=IF(F{row}=\"\", \"\", VLOOKUP(F{row}, DanhSachDonViDaoTao, 2, FALSE))";
+                    ws.Cells[row, 28].Formula = schoolIdFormula;
                 }
 
                 // 🔐 Ẩn các cột chứa ID
-                ws.Column(26).Hidden = true;
+                ws.Column(26).Hidden = true; // EmployeeId
                 ws.Column(26).Width = 0.1;
-                ws.Column(27).Hidden = true;
+                ws.Column(27).Hidden = true; // CertificateTypeId
                 ws.Column(27).Width = 0.1;
-
-                // ✅ BỎ CONDITIONAL FORMATTING - Không validate ở đây
+                ws.Column(28).Hidden = true; // GraduateSchoolId
+                ws.Column(28).Width = 0.1;
 
                 // Border cho vùng dữ liệu
                 var dataRange = ws.Cells[$"A{startRow}:Y{endRow}"];
@@ -164,10 +186,18 @@ namespace ImportExportExcellApi.Controllers
                 dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
 
-                // Format header cho cột "Là bằng chính"
+                // Format header
                 ws.Cells[4, 4].Value = "Là bằng chính";
                 ws.Cells[4, 4].Style.Font.Bold = true;
                 ws.Cells[4, 4].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                ws.Cells[4, 5].Value = "Tên bằng cấp/Chứng chỉ"; // Header cột E - TEXT
+                ws.Cells[4, 5].Style.Font.Bold = true;
+                ws.Cells[4, 5].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                ws.Cells[4, 6].Value = "Đơn vị đào tạo"; // Header cột F - DROPDOWN
+                ws.Cells[4, 6].Style.Font.Bold = true;
+                ws.Cells[4, 6].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                 fileBytes = package.GetAsByteArray();
             }
@@ -198,9 +228,12 @@ namespace ImportExportExcellApi.Controllers
                     int row = startRow;
                     int codeColumn = 1;           // Cột A: Code
                     int certNameColumn = 3;       // Cột C: Certificate Name
-                    int isPrimaryColumn = 4;      // ✅ Cột D: Là bằng chính (Có/Không)
+                    int isPrimaryColumn = 4;      // Cột D: Là bằng chính
+                    int certTextInputColumn = 5;  // ✅ Cột E: Tên bằng cấp (Text input)
+                    int schoolNameColumn = 6;     // ✅ Cột F: Đơn vị đào tạo (Dropdown)
                     int hiddenEmpIdColumn = 26;   // Cột Z: EmployeeId
                     int hiddenCertIdColumn = 27;  // Cột AA: CertificateTypeId
+                    int hiddenSchoolIdColumn = 28;// Cột AB: GraduateSchoolId
 
                     while (ws.Cells[row, codeColumn].Value != null)
                     {
@@ -208,7 +241,7 @@ namespace ImportExportExcellApi.Controllers
 
                         if (!string.IsNullOrEmpty(code))
                         {
-                            // Validate Employee (vẫn giữ validate cơ bản)
+                            // Validate Employee
                             var employee = AppDataContext.Employees
                                 .FirstOrDefault(e => e.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
 
@@ -219,7 +252,7 @@ namespace ImportExportExcellApi.Controllers
                                 continue;
                             }
 
-                            // Đọc CertificateTypeId từ cột ẩn AA
+                            // Đọc CertificateTypeId
                             long? certificateTypeId = null;
                             var certName = ws.Cells[row, certNameColumn].Value?.ToString()?.Trim();
                             var certIdValue = ws.Cells[row, hiddenCertIdColumn].Value;
@@ -230,7 +263,22 @@ namespace ImportExportExcellApi.Controllers
                                 certificateTypeId = cert?.Id;
                             }
 
-                            // ✅ Đọc giá trị "Là bằng chính" - KHÔNG VALIDATE, chỉ đọc và trả về
+                            // ✅ Đọc Tên bằng cấp từ cột E (Text input)
+                            var certTextName = ws.Cells[row, certTextInputColumn].Value?.ToString()?.Trim();
+
+                            // ✅ Đọc GraduateSchoolId từ cột ẩn AB (từ dropdown cột F)
+                            long? graduateSchoolId = null;
+                            var schoolName = ws.Cells[row, schoolNameColumn].Value?.ToString()?.Trim();
+                            var schoolIdValue = ws.Cells[row, hiddenSchoolIdColumn].Value;
+
+                            if (!string.IsNullOrEmpty(schoolName) && schoolIdValue != null && long.TryParse(schoolIdValue.ToString(), out long parsedSchoolId))
+                            {
+                                var school = AppDataContext.SysOtherLists
+                                    .FirstOrDefault(s => s.Id == parsedSchoolId && s.Name == schoolName && s.TypeCode == "GRADUATE_SCHOOL");
+                                graduateSchoolId = school?.Id;
+                            }
+
+                            // Đọc giá trị "Là bằng chính"
                             var isPrimaryRaw = ws.Cells[row, isPrimaryColumn].Value?.ToString()?.Trim();
                             bool isPrimary = isPrimaryRaw?.Equals("Có", StringComparison.OrdinalIgnoreCase) == true;
 
@@ -243,7 +291,12 @@ namespace ImportExportExcellApi.Controllers
                                 FullName = AppDataContext.EmployeeCvs.FirstOrDefault(cv => cv.Id == employee.EmployeeId)?.FullName,
                                 CertificateName = certName,
                                 CertificateTypeId = certificateTypeId,
-                                IsPrimaryCertificate = isPrimary  // ✅ Trả về nguyên giá trị user chọn
+                                IsPrimaryCertificate = isPrimary,
+
+                                // ✅ Thông tin mới với thứ tự đúng
+                                CertificateTextName = certTextName,  // Tên bằng cấp (text input từ cột E)
+                                GraduateSchoolName = schoolName,     // Đơn vị đào tạo (dropdown từ cột F)
+                                GraduateSchoolId = graduateSchoolId
                             });
                         }
 
@@ -264,7 +317,6 @@ namespace ImportExportExcellApi.Controllers
             });
         }
 
-
         public class EmployeeImportResult
         {
             public int RowNumber { get; set; }
@@ -272,10 +324,14 @@ namespace ImportExportExcellApi.Controllers
             public long EmployeeId { get; set; }
             public long EmployeeCvId { get; set; }
             public string FullName { get; set; }
-            public string CertificateName { get; set; }      // Tên hiển thị (để verify)
-            public long? CertificateTypeId { get; set; }     // ✅ ID để lưu vào DB
+            public string CertificateName { get; set; }      // Loại bằng cấp (dropdown cột C)
+            public long? CertificateTypeId { get; set; }
             public bool IsPrimaryCertificate { get; set; }
 
+            // ✅ Thông tin mới
+            public string CertificateTextName { get; set; }  // Tên bằng cấp (text input cột E)
+            public string GraduateSchoolName { get; set; }   // Đơn vị đào tạo (dropdown cột F)
+            public long? GraduateSchoolId { get; set; }      // ID đơn vị đào tạo
         }
 
         /// <summary>
