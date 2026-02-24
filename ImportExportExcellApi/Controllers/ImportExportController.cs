@@ -39,53 +39,116 @@ namespace ImportExportExcellApi.Controllers
 
             string templateFolder = Path.Combine(_environment.ContentRootPath, _templateFolderName);
             string baseTemplatePath = Path.Combine(templateFolder, _baseTemplateName);
-            string releaseTemplatePath = Path.Combine(templateFolder, _releaseTemplateName);
 
             if (!System.IO.File.Exists(baseTemplatePath))
             {
                 return NotFound(new { message = $"Không tìm thấy file Base Template tại: {baseTemplatePath}" });
             }
 
-            GenerateReleaseTemplate(baseTemplatePath, releaseTemplatePath);
-
-            var sampleData = new[]
-            {
-                new {
-                    EmployeeId = 1211L,
-                    Code = "EMP001",
-                    FullName = "Nguyễn Văn A",
-                    certificateType = 98L,
-                    certificateTypeName = "Bằng Đại học",
-                    IsPrime = "Có",
-                },
-                new {
-                    EmployeeId = 222L,
-                    Code = "EMP002",
-                    FullName = "Trần Thị B",
-                    certificateType = 99L,
-                    certificateTypeName = "Bằng cao đẳng",
-                    IsPrime = "Không",
-                }
-            };
-
             byte[] fileBytes;
             string fileName = $"Mau_Nhap_Lieu_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
-            using (var package = new ExcelPackage(new FileInfo(releaseTemplatePath)))
+            using (var package = new ExcelPackage(new FileInfo(baseTemplatePath)))
             {
-                var ws = package.Workbook.Worksheets[0];
-                int startRow = 6;
+                // ========================================
+                // 1. TẠO SHEET ẨN CHỨA DỮ LIỆU TRA CỨU
+                // ========================================
+                string lookupSheetName = "Data_Lookup";
 
-                foreach (var item in sampleData)
+                // Xóa sheet cũ nếu tồn tại
+                if (package.Workbook.Worksheets.Any(w => w.Name == lookupSheetName))
                 {
-                    int row = startRow++;
-                    ws.Cells[row, 2].Value = item.Code;
-                    ws.Cells[row, 3].Value = item.FullName;
-                    ws.Cells[row, 4].Value = item.EmployeeId;
-                    ws.Cells[row, 5].Value = item.certificateTypeName;
-                    ws.Cells[row, 6].Value = item.certificateType;
-                    ws.Cells[row, 7].Value = item.IsPrime;
+                    package.Workbook.Worksheets.Delete(lookupSheetName);
                 }
+
+                var lookupWs = package.Workbook.Worksheets.Add(lookupSheetName);
+                lookupWs.Hidden = eWorkSheetHidden.Hidden; // Ẩn sheet
+
+                // Header cho sheet lookup
+                lookupWs.Cells[1, 1].Value = "CODE";
+                lookupWs.Cells[1, 2].Value = "FULL_NAME";
+                lookupWs.Cells[1, 1, 1, 2].Style.Font.Bold = true;
+
+                // Đổ dữ liệu từ DB vào sheet lookup
+                var lookupData = AppDataContext.Employees
+                    .Join(AppDataContext.EmployeeCvs,
+                        emp => emp.EmployeeId,
+                        cv => cv.Id,
+                        (emp, cv) => new { emp.Code, cv.FullName })
+                    .OrderBy(x => x.Code)
+                    .ToList();
+
+                for (int i = 0; i < lookupData.Count; i++)
+                {
+                    lookupWs.Cells[i + 2, 1].Value = lookupData[i].Code;
+                    lookupWs.Cells[i + 2, 2].Value = lookupData[i].FullName;
+                }
+
+                // Tạo Named Range cho vùng dữ liệu lookup (Code + FullName)
+                string lookupRangeName = "DanhSachNhanVien";
+                package.Workbook.Names.Add(lookupRangeName,
+                    lookupWs.Cells[$"A2:B{lookupData.Count + 1}"]);
+
+                // Tạo Named Range chỉ chứa Code cho dropdown
+                string codeListRangeName = "DanhSachCode";
+                package.Workbook.Names.Add(codeListRangeName,
+                    lookupWs.Cells[$"A2:A{lookupData.Count + 1}"]);
+
+                // ========================================
+                // 2. XỬ LÝ SHEET CHÍNH - GIỮ NGUYÊN CẤU TRÚC
+                // ========================================
+                var ws = package.Workbook.Worksheets[0]; // Sheet đầu tiên
+
+                // ✅ Không ghi đè header (row 4) và hướng dẫn (row 5)
+                // ✅ Chỉ áp dụng dropdown và formula từ row 6 trở đi
+                int startRow = 6;
+                int endRow = 100; // Số dòng tối đa cho phép nhập (có thể điều chỉnh)
+
+                // ========================================
+                // 3. ÁP DỤNG DROPDOWN CHO CỘT A (MÃ NHÂN VIÊN)
+                // ========================================
+                // Cột A = column 1 (Mã nhân viên)
+                ApplyDropdown(ws, startRow, endRow, 1, codeListRangeName);
+
+                // ========================================
+                // 4. ÁP DỤNG VLOOKUP CHO CỘT B (HỌ VÀ TÊN)
+                // ========================================
+                // Cột B = column 2 (Họ và tên) - tự động hiện khi nhập mã ở cột A
+                for (int row = startRow; row <= endRow; row++)
+                {
+                    // Công thức: Nếu cột A rỗng thì để trống, ngược lại tra cứu tên
+                    string vlookupFormula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachNhanVien, 2, FALSE))";
+                    ws.Cells[row, 2].Formula = vlookupFormula;
+
+                    // Format cột Họ tên: màu xám nhạt để biết là tự động
+                    ws.Cells[row, 2].Style.Font.Color.SetColor(Color.DarkGray);
+                    ws.Cells[row, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    ws.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(245, 245, 245));
+                }
+
+                // ========================================
+                // 5. ÁP DỤNG DROPDOWN CHO CÁC CỘT KHÁC (nếu có)
+                // ========================================
+                // Cột F = column 6 (Đơn vị đào tạo) - nếu có Named Range
+                if (ws.Workbook.Names.Any(n => n.Name.Equals("DanhSachBoPhan", StringComparison.OrdinalIgnoreCase)))
+                {
+                    ApplyDropdown(ws, startRow, endRow, 6, "DanhSachBoPhan");
+                }
+
+                // ========================================
+                // 6. FORMAT & HOÀN TẤT
+                // ========================================
+
+                // Border cho vùng dữ liệu (từ row 6 đến row 100)
+                // Giả sử template có 7 cột (A đến G)
+                var dataRange = ws.Cells[$"A{startRow}:G{endRow}"];
+                dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                dataRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+
+                // Căn giữa cho cột STT (nếu có)
+                ws.Column(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                 fileBytes = package.GetAsByteArray();
             }
@@ -93,105 +156,28 @@ namespace ImportExportExcellApi.Controllers
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
 
-        private void GenerateReleaseTemplate(string sourcePath, string destPath)
-        {
-            using (var package = new ExcelPackage(new FileInfo(sourcePath)))
-            {
-                var ws = package.Workbook.Worksheets[0];
-                string dsSheetName = "DataSources";
-
-                if (package.Workbook.Worksheets.Any(x => x.Name == dsSheetName))
-                {
-                    package.Workbook.Worksheets.Delete(dsSheetName);
-                }
-
-                var dsWs = package.Workbook.Worksheets.Add(dsSheetName);
-                dsWs.Hidden = eWorkSheetHidden.Hidden;
-
-                var employees = AppDataContext.EmployeeCvs.ToList();
-                var certificates = AppDataContext.SysOtherLists.ToList();
-
-                for (int i = 0; i < employees.Count; i++)
-                {
-                    dsWs.Cells[i + 1, 1].Value = employees[i].Id;
-                    dsWs.Cells[i + 1, 2].Value = employees[i].FullName;
-                }
-
-                for (int i = 0; i < certificates.Count; i++)
-                {
-                    dsWs.Cells[i + 1, 4].Value = certificates[i].Id;
-                    dsWs.Cells[i + 1, 5].Value = certificates[i].Name;
-                }
-
-                if (employees.Any())
-                {
-                    package.Workbook.Names.Add("List_EmpNames", dsWs.Cells[1, 2, employees.Count, 2]);
-                }
-                if (certificates.Any())
-                {
-                    package.Workbook.Names.Add("List_CertNames", dsWs.Cells[1, 5, certificates.Count, 5]);
-                }
-
-                int startRow = 6;
-                int endRow = 100;
-
-                // === XỬ LÝ FULL_NAME & ID ẨN ===
-                ApplyDropdown(ws, startRow, endRow, 3, "List_EmpNames");
-
-                for (int r = startRow; r <= endRow; r++)
-                {
-                    string idColumnRange = $"DataSources!$A$1:$A${employees.Count}";
-                    string nameColumnRange = $"DataSources!$B$1:$B${employees.Count}";
-
-                    ws.Cells[r, 4].Formula = $"IF(C{r}=\"\", \"\", INDEX({idColumnRange}, MATCH(C{r}, {nameColumnRange}, 0)))";
-                }
-                ws.Column(4).Hidden = true;
-
-                // === XỬ LÝ CERTIFICATE_TYPE & ID ẨN ===
-                ApplyDropdown(ws, startRow, endRow, 5, "List_CertNames");
-
-                for (int r = startRow; r <= endRow; r++)
-                {
-                    string idColumnRange = $"DataSources!$D$1:$D${certificates.Count}";
-                    string nameColumnRange = $"DataSources!$E$1:$E${certificates.Count}";
-
-                    ws.Cells[r, 6].Formula = $"IF(E{r}=\"\", \"\", INDEX({idColumnRange}, MATCH(E{r}, {nameColumnRange}, 0)))";
-                }
-                ws.Column(6).Hidden = true;
-
-                // === XỬ LÝ IS_PRIME ===
-                var primeValidation = ws.Cells[startRow, 7, endRow, 7].DataValidation.AddListDataValidation();
-
-                // SỬA: EPPlus 5.x+ dùng Formula.ExcelFormula
-                primeValidation.Formula.ExcelFormula = "\"Có,Không\"";
-
-                primeValidation.ShowErrorMessage = true;
-                primeValidation.ErrorTitle = "Dữ liệu không hợp lệ";
-                primeValidation.Error = "Vui lòng chọn Có hoặc Không.";
-
-                package.SaveAs(new FileInfo(destPath));
-            }
-        }
-
-
+        /// <summary>
+        /// Áp dụng Data Validation dạng Dropdown List cho một vùng ô
+        /// </summary>
         private void ApplyDropdown(ExcelWorksheet ws, int startRow, int endRow, int column, string namedRange)
         {
-            if (ws.Workbook.Names.Any(n => n.Name == namedRange))
+            // Kiểm tra Named Range có tồn tại trong Workbook
+            if (ws.Workbook.Names.Any(n => n.Name.Equals(namedRange, StringComparison.OrdinalIgnoreCase)))
             {
                 var range = ws.Cells[startRow, column, endRow, column];
                 var validation = range.DataValidation.AddListDataValidation();
 
-                // EPPlus 5.x+ dùng Formula.ExcelFormula
+                // Dùng INDIRECT để tham chiếu đến Named Range
                 validation.Formula.ExcelFormula = $"INDIRECT(\"{namedRange}\")";
 
                 validation.ShowErrorMessage = true;
-                validation.ErrorTitle = "Chọn từ danh sách";
-                validation.Error = "Vui lòng chọn giá trị có sẵn.";
-                validation.PromptTitle = "Hướng dẫn";
-                validation.Prompt = "Nhấn vào mũi tên để chọn.";
+                validation.ErrorStyle = ExcelDataValidationWarningStyle.warning;
+                validation.ErrorTitle = "Giá trị không hợp lệ";
+                validation.Error = "Vui lòng chọn mã có trong danh sách dropdown.";
                 validation.ShowInputMessage = true;
+                validation.PromptTitle = "💡 Hướng dẫn";
+                validation.Prompt = "Chọn từ danh sách hoặc paste mã vào, tên sẽ tự động hiện ra.";
             }
         }
-
     }
 }

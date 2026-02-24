@@ -33,10 +33,10 @@ namespace ImportExportExcellApi.Data
                 return;
 
             // 1. Init dữ liệu cho EmployeeCv (Hồ sơ chi tiết)
-            var cv1 = new EmployeeCv { Id = 1, FullName = "Nguyễn Văn A", Age = 30, Address = "Hà Nội", Email = "a@example.com", Phone = "0901111111", DateBirth = new DateTime(1996, 5, 20) };
-            var cv2 = new EmployeeCv { Id = 2, FullName = "Trần Thị B", Age = 28, Address = "TP.HCM", Email = "b@example.com", Phone = "0902222222", DateBirth = new DateTime(1998, 8, 15) };
-            var cv3 = new EmployeeCv { Id = 3, FullName = "Lê Văn C", Age = 35, Address = "Đà Nẵng", Email = "c@example.com", Phone = "0903333333", DateBirth = new DateTime(1991, 2, 10) };
-            var cv4 = new EmployeeCv { Id = 4, FullName = "Phạm Thị D", Age = 25, Address = "Hải Phòng", Email = "d@example.com", Phone = "0904444444", DateBirth = new DateTime(2001, 11, 5) };
+            var cv1 = new EmployeeCv { Id = 11, FullName = "Nguyễn Văn A", Age = 30, Address = "Hà Nội", Email = "a@example.com", Phone = "0901111111", DateBirth = new DateTime(1996, 5, 20) };
+            var cv2 = new EmployeeCv { Id = 22, FullName = "Trần Thị B", Age = 28, Address = "TP.HCM", Email = "b@example.com", Phone = "0902222222", DateBirth = new DateTime(1998, 8, 15) };
+            var cv3 = new EmployeeCv { Id = 32, FullName = "Lê Văn C", Age = 35, Address = "Đà Nẵng", Email = "c@example.com", Phone = "0903333333", DateBirth = new DateTime(1991, 2, 10) };
+            var cv4 = new EmployeeCv { Id = 44, FullName = "Phạm Thị D", Age = 25, Address = "Hải Phòng", Email = "d@example.com", Phone = "0904444444", DateBirth = new DateTime(2001, 11, 5) };
 
             _employeeCvs.AddRange(new[] { cv1, cv2, cv3, cv4 });
 
@@ -44,18 +44,18 @@ namespace ImportExportExcellApi.Data
             // Lưu ý: EmployeeId trỏ đến Id của EmployeeCv
             _employees.AddRange(new[]
             {
-                new Employee { Id = 1, Code = "EMP001", EmployeeId = 1 }, // Nguyễn Văn A
-                new Employee { Id = 2, Code = "EMP002", EmployeeId = 2 }, // Trần Thị B
-                new Employee { Id = 3, Code = "EMP003", EmployeeId = 3 }, // Lê Văn C
-                new Employee { Id = 4, Code = "EMP004", EmployeeId = 4 }  // Phạm Thị D
+                new Employee { Id = 1, Code = "EMP001", EmployeeId = 11 }, // Nguyễn Văn A
+                new Employee { Id = 2, Code = "EMP002", EmployeeId = 22 }, // Trần Thị B
+                new Employee { Id = 3, Code = "EMP003", EmployeeId = 33 }, // Lê Văn C
+                new Employee { Id = 4, Code = "EMP004", EmployeeId = 44 }  // Phạm Thị D
             });
 
             // 3. Init dữ liệu cho SysOtherList (Dùng cho Dropdown khác)
             _sysOtherLists.AddRange(new[]
             {
-                new SysOtherList { Id = 1, Name = "Bộ phận IT" },
-                new SysOtherList { Id = 2, Name = "Bộ phận Kế toán" },
-                new SysOtherList { Id = 3, Name = "Bộ phận Nhân sự" },
+                new SysOtherList { Id = 1, Name = "Bộ phận IT" ,TypeCode = "CERTIFICATE_TYPE"},
+                new SysOtherList { Id = 2, Name = "Trình độ chuyên môn" ,TypeCode = "LEVEL_ID"},
+                new SysOtherList { Id = 3, Name = "Hình thức đào tạo" ,TypeCode = "TRAINING_METHOD"},
                 new SysOtherList { Id = 4, Name = "Bộ phận Sản xuất" },
                 new SysOtherList { Id = 5, Name = "Bộ phận Kinh doanh" }
             });
