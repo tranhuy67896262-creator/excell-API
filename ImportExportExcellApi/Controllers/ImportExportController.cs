@@ -64,7 +64,7 @@ namespace ImportExportExcellApi.Controllers
 
                 lookupWs.Cells[1, 1].Value = "CODE";
                 lookupWs.Cells[1, 2].Value = "FULL_NAME";
-                lookupWs.Cells[1, 3].Value = "EMPLOYEE_ID"; // ✅ Thêm cột ID
+                lookupWs.Cells[1, 3].Value = "EMPLOYEE_ID";
                 lookupWs.Cells[1, 1, 1, 3].Style.Font.Bold = true;
 
                 var lookupData = AppDataContext.Employees
@@ -79,76 +79,58 @@ namespace ImportExportExcellApi.Controllers
                 {
                     lookupWs.Cells[i + 2, 1].Value = lookupData[i].Code;
                     lookupWs.Cells[i + 2, 2].Value = lookupData[i].FullName;
-                    lookupWs.Cells[i + 2, 3].Value = lookupData[i].Id; // ✅ Lưu EmployeeId
+                    lookupWs.Cells[i + 2, 3].Value = lookupData[i].Id;
                 }
 
-                // Named Range cho VLOOKUP (Code + FullName)
-                package.Workbook.Names.Add("DanhSachNhanVien",
-                    lookupWs.Cells[$"A2:B{lookupData.Count + 1}"]);
-
-                // ✅ Named Range cho ID lookup (Code + EmployeeId)
-                package.Workbook.Names.Add("DanhSachCodeId",
-                    lookupWs.Cells[$"A2:C{lookupData.Count + 1}"]);
-
-                // Named Range chỉ chứa Code cho dropdown
-                package.Workbook.Names.Add("DanhSachCode",
-                    lookupWs.Cells[$"A2:A{lookupData.Count + 1}"]);
+                // Tạo Named Ranges
+                package.Workbook.Names.Add("DanhSachNhanVien", lookupWs.Cells[$"A2:B{lookupData.Count + 1}"]);
+                package.Workbook.Names.Add("DanhSachCodeId", lookupWs.Cells[$"A2:C{lookupData.Count + 1}"]);
+                package.Workbook.Names.Add("DanhSachCode", lookupWs.Cells[$"A2:A{lookupData.Count + 1}"]);
 
                 // ========================================
-                // 2. XỬ LÝ SHEET CHÍNH
+                // 2. XỬ LÝ SHEET CHÍNH - GIỮ NGUYÊN FORMAT
                 // ========================================
                 var ws = package.Workbook.Worksheets[0];
                 int startRow = 6;
                 int endRow = 100;
 
-                // ✅ Cột A (1): Mã nhân viên - Dropdown
+                // ✅ 1. Áp dụng Dropdown (Data Validation) - Không ảnh hưởng visual
                 ApplyDropdown(ws, startRow, endRow, 1, "DanhSachCode");
-
-                // ✅ Cột B (2): Họ tên - VLOOKUP từ Code
-                for (int row = startRow; row <= endRow; row++)
-                {
-                    string vlookupFormula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachNhanVien, 2, FALSE))";
-                    ws.Cells[row, 2].Formula = vlookupFormula;
-                    ws.Cells[row, 2].Style.Font.Color.SetColor(Color.DarkGray);
-                    ws.Cells[row, 2].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    ws.Cells[row, 2].Style.Fill.BackgroundColor.SetColor(Color.FromArgb(245, 245, 245));
-                }
-
-                // 🎯 CỘT ẨN CHỨA EMPLOYEE ID (ví dụ cột Z = column 26)
-                int hiddenIdColumn = 26; // Cột Z
-                for (int row = startRow; row <= endRow; row++)
-                {
-                    // ✅ Formula: VLOOKUP Code → lấy EmployeeId từ cột thứ 3 của DanhSachCodeId
-                    string idFormula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachCodeId, 3, FALSE))";
-                    ws.Cells[row, hiddenIdColumn].Formula = idFormula;
-                }
-
-                // 🔐 ẨN CỘT Z CHỨA ID
-                ws.Column(hiddenIdColumn).Hidden = true;
-                ws.Column(hiddenIdColumn).Width = 0.1; // Gần như vô hình
-
-                // ========================================
-                // 3. DROPDOWN CÁC CỘT KHÁC + FORMAT
-                // ========================================
                 if (ws.Workbook.Names.Any(n => n.Name.Equals("DanhSachBoPhan", StringComparison.OrdinalIgnoreCase)))
                 {
                     ApplyDropdown(ws, startRow, endRow, 6, "DanhSachBoPhan");
                 }
 
-                var dataRange = ws.Cells[$"A{startRow}:Y{endRow}"]; // Border đến cột Y (trừ cột Z ẩn)
+                // ✅ 2. Đổ công thức và giá trị - KHÔNG GÁN STYLE LẠI
+                for (int row = startRow; row <= endRow; row++)
+                {
+                    // Cột B: FullName (VLOOKUP)
+                    string nameFormula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachNhanVien, 2, FALSE))";
+                    var nameCell = ws.Cells[row, 2];
+                    nameCell.Formula = nameFormula;
+
+                    // Cột Z (26): Hidden ID
+                    string idFormula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachCodeId, 3, FALSE))";
+                    ws.Cells[row, 26].Formula = idFormula;
+                }
+
+                // 🔐 Ẩn cột ID (Cột Z)
+                ws.Column(26).Hidden = true;
+                ws.Column(26).Width = 0.1;
+
+                
+                var dataRange = ws.Cells[$"A{startRow}:Y{endRow}"];
                 dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
-
-                ws.Column(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                ws.Cells[$"A1:Y{endRow}"].AutoFitColumns();
 
                 fileBytes = package.GetAsByteArray();
             }
 
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
+
         [HttpPost("import-employee")]
         public IActionResult ImportEmployee(IFormFile file)
         {
