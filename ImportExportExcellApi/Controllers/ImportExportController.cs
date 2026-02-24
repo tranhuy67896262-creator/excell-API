@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using OfficeOpenXml.DataValidation;
 using OfficeOpenXml.Style;
+using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -120,7 +121,7 @@ namespace ImportExportExcellApi.Controllers
                     lookupWs.Cells[i + 2, 8].Value = graduateSchools[i].Id;
                 }
 
-                // ✅ LEVEL_ID (Trình độ chuyên môn)
+                // LEVEL_ID (Trình độ chuyên môn)
                 var levelIds = AppDataContext.SysOtherLists
                     .Where(s => s.TypeCode == "LEVEL_ID")
                     .OrderBy(s => s.Name)
@@ -131,7 +132,7 @@ namespace ImportExportExcellApi.Controllers
                     lookupWs.Cells[i + 2, 10].Value = levelIds[i].Id;
                 }
 
-                // ✅ LEVEL_TRAIN (Trình độ học vấn)
+                // LEVEL_TRAIN (Trình độ học vấn)
                 var levelTrains = AppDataContext.SysOtherLists
                     .Where(s => s.TypeCode == "LEVEL_TRAIN")
                     .OrderBy(s => s.Name)
@@ -142,7 +143,7 @@ namespace ImportExportExcellApi.Controllers
                     lookupWs.Cells[i + 2, 12].Value = levelTrains[i].Id;
                 }
 
-                // ✅ TRAINING_METHOD (Hình thức đào tạo)
+                // TRAINING_METHOD (Hình thức đào tạo)
                 var trainingMethods = AppDataContext.SysOtherLists
                     .Where(s => s.TypeCode == "TRAINING_METHOD")
                     .OrderBy(s => s.Name)
@@ -153,7 +154,9 @@ namespace ImportExportExcellApi.Controllers
                     lookupWs.Cells[i + 2, 14].Value = trainingMethods[i].Id;
                 }
 
-                // Tạo Named Ranges
+                // ✅ XÓA PHẦN CLASSIFICATION - Vì giờ là text input, không cần trong lookup
+
+                // Tạo Named Ranges (XÓA DanhSachXepLoai)
                 package.Workbook.Names.Add("DanhSachNhanVien", lookupWs.Cells[$"A2:B{lookupData.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachCodeId", lookupWs.Cells[$"A2:C{lookupData.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachCode", lookupWs.Cells[$"A2:A{lookupData.Count + 1}"]);
@@ -162,23 +165,22 @@ namespace ImportExportExcellApi.Controllers
                 package.Workbook.Names.Add("DanhSachCoKhong", lookupWs.Cells[$"F2:F3"]);
                 package.Workbook.Names.Add("DanhSachDonViDaoTao", lookupWs.Cells[$"G2:H{graduateSchools.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachDonViDaoTaoName", lookupWs.Cells[$"G2:G{graduateSchools.Count + 1}"]);
-
-                // ✅ Named Ranges cho 3 dropdown mới
                 package.Workbook.Names.Add("DanhSachLevelId", lookupWs.Cells[$"I2:J{levelIds.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachLevelIdName", lookupWs.Cells[$"I2:I{levelIds.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachLevelTrain", lookupWs.Cells[$"K2:L{levelTrains.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachLevelTrainName", lookupWs.Cells[$"K2:K{levelTrains.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachTrainingMethod", lookupWs.Cells[$"M2:N{trainingMethods.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachTrainingMethodName", lookupWs.Cells[$"M2:M{trainingMethods.Count + 1}"]);
+                // ✅ XÓA: package.Workbook.Names.Add("DanhSachXepLoai", ...)
 
                 // ========================================
-                // 2. XỬ LÝ SHEET CHÍNH
+                // 2. XỬ LÝ SHEET CHÍNH - GIỮ NGUYÊN TEMPLATE
                 // ========================================
                 var ws = package.Workbook.Worksheets[0];
                 int startRow = 6;
                 int endRow = 100;
 
-                // Dropdown các cột
+                // ✅ CHỈ ÁP DỤNG DROPDOWN CHO CÁC CỘT CẦN THIẾT
                 ApplyDropdown(ws, startRow, endRow, 1, "DanhSachCode");              // A: Code
                 ApplyDropdown(ws, startRow, endRow, 3, "DanhSachChungChiName");      // C: Loại bằng
                 ApplyDropdown(ws, startRow, endRow, 4, "DanhSachCoKhong");           // D: Bằng chính
@@ -187,11 +189,13 @@ namespace ImportExportExcellApi.Controllers
                 ApplyDropdown(ws, startRow, endRow, 7, "DanhSachLevelIdName");       // G: Trình độ chuyên môn
                 ApplyDropdown(ws, startRow, endRow, 8, "DanhSachLevelTrainName");    // H: Trình độ học vấn
                 ApplyDropdown(ws, startRow, endRow, 9, "DanhSachTrainingMethodName"); // I: Hình thức đào tạo
+                // ✅ Q: Xếp loại - TEXT INPUT (không dropdown)
+                // ✅ R: Ghi chú - TEXT INPUT (không dropdown)
 
-                // Công thức cho các cột
+                // ✅ CHỈ THÊM CÔNG THỨC - KHÔNG SỬA GIÁ TRỊ
                 for (int row = startRow; row <= endRow; row++)
                 {
-                    // FullName
+                    // FullName (cột B)
                     ws.Cells[row, 2].Formula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachNhanVien, 2, FALSE))";
 
                     // Hidden EmployeeId (Z=26)
@@ -203,13 +207,13 @@ namespace ImportExportExcellApi.Controllers
                     // Hidden GraduateSchoolId (AB=28)
                     ws.Cells[row, 28].Formula = $"=IF(F{row}=\"\", \"\", VLOOKUP(F{row}, DanhSachDonViDaoTao, 2, FALSE))";
 
-                    // ✅ Hidden LevelId (AC=29)
+                    // Hidden LevelId (AC=29)
                     ws.Cells[row, 29].Formula = $"=IF(G{row}=\"\", \"\", VLOOKUP(G{row}, DanhSachLevelId, 2, FALSE))";
 
-                    // ✅ Hidden LevelTrain (AD=30)
+                    // Hidden LevelTrain (AD=30)
                     ws.Cells[row, 30].Formula = $"=IF(H{row}=\"\", \"\", VLOOKUP(H{row}, DanhSachLevelTrain, 2, FALSE))";
 
-                    // ✅ Hidden TrainingMethod (AE=31)
+                    // Hidden TrainingMethod (AE=31)
                     ws.Cells[row, 31].Formula = $"=IF(I{row}=\"\", \"\", VLOOKUP(I{row}, DanhSachTrainingMethod, 2, FALSE))";
                 }
 
@@ -220,26 +224,22 @@ namespace ImportExportExcellApi.Controllers
                     ws.Column(col).Width = 0.1;
                 }
 
-                // Border
-                var dataRange = ws.Cells[$"A{startRow}:Y{endRow}"];
+                // ✅ CHỈ FORMAT - KHÔNG SỬA NỘI DUNG
+                ws.Column(10).Style.Numberformat.Format = "0";          // YEAR
+                ws.Column(12).Style.Numberformat.Format = "0.0";        // MARK
+                ws.Column(13).Style.Numberformat.Format = "dd/mm/yyyy"; // TRAIN_FROM_DATE
+                ws.Column(14).Style.Numberformat.Format = "dd/mm/yyyy"; // TRAIN_TO_DATE
+                ws.Column(15).Style.Numberformat.Format = "dd/mm/yyyy"; // EFFECT_FROM
+                ws.Column(16).Style.Numberformat.Format = "dd/mm/yyyy"; // EFFECT_TO
+
+                // Border cho vùng dữ liệu
+                var dataRange = ws.Cells[$"A{startRow}:R{endRow}"];
                 dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
 
-                // Format headers
-                ws.Cells[4, 4].Value = "Bằng chính";
-                ws.Cells[4, 4].Style.Font.Bold = true;
-                ws.Cells[4, 5].Value = "Tên bằng cấp";
-                ws.Cells[4, 5].Style.Font.Bold = true;
-                ws.Cells[4, 6].Value = "Đơn vị đào tạo";
-                ws.Cells[4, 6].Style.Font.Bold = true;
-                ws.Cells[4, 7].Value = "Trình độ chuyên môn";
-                ws.Cells[4, 7].Style.Font.Bold = true;
-                ws.Cells[4, 8].Value = "Trình độ học vấn";
-                ws.Cells[4, 8].Style.Font.Bold = true;
-                ws.Cells[4, 9].Value = "Hình thức đào tạo";
-                ws.Cells[4, 9].Style.Font.Bold = true;
+                // ✅ KHÔNG SỬA HEADER - GIỮ NGUYÊN TỪ TEMPLATE
 
                 fileBytes = package.GetAsByteArray();
             }
@@ -259,34 +259,64 @@ namespace ImportExportExcellApi.Controllers
             var employees = new List<EmployeeImportResult>();
             var errors = new List<string>();
 
+            // ✅ Helper function để đọc ngày tháng từ Excel
+            DateTime? ReadDateFromExcel(object cellValue)
+            {
+                if (cellValue == null) return null;
+
+                // Trường hợp 1: Excel đã lưu là DateTime
+                if (cellValue is DateTime dateTime)
+                {
+                    return dateTime;
+                }
+
+                // Trường hợp 2: Excel lưu là số (serial number)
+                if (cellValue is double serialNumber)
+                {
+                    try
+                    {
+                        return DateTime.FromOADate(serialNumber);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+
+                // Trường hợp 3: Excel lưu là string
+                if (cellValue is string stringValue)
+                {
+                    if (DateTime.TryParseExact(stringValue,
+                        new[] { "dd/MM/yyyy", "dd-MM-yyyy", "yyyy-MM-dd", "dd/MM/yyyy", "M/d/yyyy" },
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None,
+                        out DateTime parsedDate))
+                    {
+                        return parsedDate;
+                    }
+
+                    // Thử parse mặc định
+                    if (DateTime.TryParse(stringValue, out parsedDate))
+                    {
+                        return parsedDate;
+                    }
+                }
+
+                return null;
+            }
+
             using (var stream = new MemoryStream())
             {
                 file.CopyTo(stream);
                 using (var package = new ExcelPackage(stream))
                 {
                     var ws = package.Workbook.Worksheets[0];
-
                     int startRow = 6;
                     int row = startRow;
-                    int codeColumn = 1;
-                    int certNameColumn = 3;
-                    int isPrimaryColumn = 4;
-                    int certTextInputColumn = 5;
-                    int schoolNameColumn = 6;
-                    int levelIdColumn = 7;
-                    int levelTrainColumn = 8;
-                    int trainMethodColumn = 9;
 
-                    int hiddenEmpIdColumn = 26;
-                    int hiddenCertIdColumn = 27;
-                    int hiddenSchoolIdColumn = 28;
-                    int hiddenLevelIdColumn = 29;
-                    int hiddenLevelTrainColumn = 30;
-                    int hiddenTrainMethodColumn = 31;
-
-                    while (ws.Cells[row, codeColumn].Value != null)
+                    while (ws.Cells[row, 1].Value != null)
                     {
-                        var code = ws.Cells[row, codeColumn].Value?.ToString()?.Trim();
+                        var code = ws.Cells[row, 1].Value?.ToString()?.Trim();
 
                         if (!string.IsNullOrEmpty(code))
                         {
@@ -314,6 +344,25 @@ namespace ImportExportExcellApi.Controllers
                                 return null;
                             }
 
+                            // Đọc các trường dữ liệu
+                            int? year = null;
+                            if (ws.Cells[row, 10].Value != null && int.TryParse(ws.Cells[row, 10].Value.ToString(), out int parsedYear))
+                            {
+                                year = parsedYear;
+                            }
+
+                            decimal? mark = null;
+                            if (ws.Cells[row, 12].Value != null && decimal.TryParse(ws.Cells[row, 12].Value.ToString().Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal parsedMark))
+                            {
+                                mark = parsedMark;
+                            }
+
+                            // ✅ Đọc ngày tháng với helper mới
+                            DateTime? trainFromDate = ReadDateFromExcel(ws.Cells[row, 13].Value);
+                            DateTime? trainToDate = ReadDateFromExcel(ws.Cells[row, 14].Value);
+                            DateTime? effectFromDate = ReadDateFromExcel(ws.Cells[row, 15].Value);
+                            DateTime? effectToDate = ReadDateFromExcel(ws.Cells[row, 16].Value);
+
                             employees.Add(new EmployeeImportResult
                             {
                                 RowNumber = row,
@@ -321,22 +370,27 @@ namespace ImportExportExcellApi.Controllers
                                 EmployeeId = employee.Id,
                                 EmployeeCvId = employee.EmployeeId,
                                 FullName = AppDataContext.EmployeeCvs.FirstOrDefault(cv => cv.Id == employee.EmployeeId)?.FullName,
-                                CertificateName = ws.Cells[row, certNameColumn].Value?.ToString()?.Trim(),
-                                CertificateTypeId = ReadHiddenId(certNameColumn, hiddenCertIdColumn, "CERTIFICATE_TYPE"),
-                                IsPrimaryCertificate = ws.Cells[row, isPrimaryColumn].Value?.ToString()?.Trim()?.Equals("Có", StringComparison.OrdinalIgnoreCase) == true,
-                                CertificateTextName = ws.Cells[row, certTextInputColumn].Value?.ToString()?.Trim(),
-                                GraduateSchoolName = ws.Cells[row, schoolNameColumn].Value?.ToString()?.Trim(),
-                                GraduateSchoolId = ReadHiddenId(schoolNameColumn, hiddenSchoolIdColumn, "GRADUATE_SCHOOL"),
-
-                                // ✅ 3 trường mới
-                                LevelIdName = ws.Cells[row, levelIdColumn].Value?.ToString()?.Trim(),
-                                LevelId = ReadHiddenId(levelIdColumn, hiddenLevelIdColumn, "LEVEL_ID"),
-
-                                LevelTrainName = ws.Cells[row, levelTrainColumn].Value?.ToString()?.Trim(),
-                                LevelTrainId = ReadHiddenId(levelTrainColumn, hiddenLevelTrainColumn, "LEVEL_TRAIN"),
-
-                                TrainingMethodName = ws.Cells[row, trainMethodColumn].Value?.ToString()?.Trim(),
-                                TrainingMethodId = ReadHiddenId(trainMethodColumn, hiddenTrainMethodColumn, "TRAINING_METHOD")
+                                CertificateName = ws.Cells[row, 3].Value?.ToString()?.Trim(),
+                                CertificateTypeId = ReadHiddenId(3, 27, "CERTIFICATE_TYPE"),
+                                IsPrimaryCertificate = ws.Cells[row, 4].Value?.ToString()?.Trim()?.Equals("Có", StringComparison.OrdinalIgnoreCase) == true,
+                                CertificateTextName = ws.Cells[row, 5].Value?.ToString()?.Trim(),
+                                GraduateSchoolName = ws.Cells[row, 6].Value?.ToString()?.Trim(),
+                                GraduateSchoolId = ReadHiddenId(6, 28, "GRADUATE_SCHOOL"),
+                                LevelIdName = ws.Cells[row, 7].Value?.ToString()?.Trim(),
+                                LevelId = ReadHiddenId(7, 29, "LEVEL_ID"),
+                                LevelTrainName = ws.Cells[row, 8].Value?.ToString()?.Trim(),
+                                LevelTrainId = ReadHiddenId(8, 30, "LEVEL_TRAIN"),
+                                TrainingMethodName = ws.Cells[row, 9].Value?.ToString()?.Trim(),
+                                TrainingMethodId = ReadHiddenId(9, 31, "TRAINING_METHOD"),
+                                Year = year,
+                                ContentTrain = ws.Cells[row, 11].Value?.ToString()?.Trim(),
+                                Mark = mark,
+                                TrainFromDate = trainFromDate,
+                                TrainToDate = trainToDate,
+                                EffectFromDate = effectFromDate,
+                                EffectToDate = effectToDate,
+                                Classification = ws.Cells[row, 17].Value?.ToString()?.Trim(),
+                                Remark = ws.Cells[row, 18].Value?.ToString()?.Trim()
                             });
                         }
                         row++;
@@ -355,7 +409,6 @@ namespace ImportExportExcellApi.Controllers
                 errors = errors
             });
         }
-
         public class EmployeeImportResult
         {
             public int RowNumber { get; set; }
@@ -369,16 +422,21 @@ namespace ImportExportExcellApi.Controllers
             public string CertificateTextName { get; set; }
             public string GraduateSchoolName { get; set; }
             public long? GraduateSchoolId { get; set; }
-
-            // ✅ 3 trường mới
             public string LevelIdName { get; set; }
             public long? LevelId { get; set; }
-
             public string LevelTrainName { get; set; }
             public long? LevelTrainId { get; set; }
-
             public string TrainingMethodName { get; set; }
             public long? TrainingMethodId { get; set; }
+            public int? Year { get; set; }
+            public string ContentTrain { get; set; }
+            public decimal? Mark { get; set; }
+            public DateTime? TrainFromDate { get; set; }
+            public DateTime? TrainToDate { get; set; }
+            public DateTime? EffectFromDate { get; set; }
+            public DateTime? EffectToDate { get; set; }
+            public string Classification { get; set; }  // ✅ TEXT INPUT
+            public string Remark { get; set; }           // ✅ TEXT INPUT
         }
 
         private void ApplyDropdown(ExcelWorksheet ws, int startRow, int endRow, int column, string namedRange)
