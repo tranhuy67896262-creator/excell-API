@@ -1,0 +1,6 @@
+@ImportExportExcellApi_HostAddress = http://localhost:5208
+
+GET {{ImportExportExcellApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
