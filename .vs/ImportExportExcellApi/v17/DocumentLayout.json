@@ -1,34 +1,46 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\private\\code_dotnet\\ImportExportExcellApi\\",
+  "WorkspaceRootPath": "D:\\private\\code_dotnet\\excell-API\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\importexportexcellapi\\importexportexcellapi\\controllers\\importexportcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\controllers\\importexportcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\controllers\\importexportcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\importexportexcellapi\\importexportexcellapi\\importexportexcellapi.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\dto\\trainingrecorddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\dto\\trainingrecorddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\importexportexcellapi.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
       "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\importexportexcellapi.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\importexportexcellapi\\importexportexcellapi\\data\\appdatacontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\data\\appdatacontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\data\\appdatacontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\importexportexcellapi\\importexportexcellapi\\entities\\employee.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\entities\\employee.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\utils\\createfileorupdate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\utils\\createfileorupdate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\importexportexcellapi\\importexportexcellapi\\entities\\allowance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\entities\\allowance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\importexportexcellapi\\importexportexcellapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\importexportexcellapi\\importexportexcellapi\\utils\\createfileorupdate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\utils\\createfileorupdate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\entities\\allowance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\entities\\allowance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\entities\\sysotherlist.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\entities\\sysotherlist.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\entities\\employeecv.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\entities\\employeecv.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|d:\\private\\code_dotnet\\excell-api\\importexportexcellapi\\entities\\employee.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{5D2E1737-58E6-4FF4-8517-9C721D37AED0}|ImportExportExcellApi\\ImportExportExcellApi.csproj|solutionrelative:importexportexcellapi\\entities\\employee.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,24 +50,33 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "ImportExportExcellApi",
-              "DocumentMoniker": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\ImportExportExcellApi.csproj",
-              "RelativeDocumentMoniker": "ImportExportExcellApi\\ImportExportExcellApi.csproj",
-              "ToolTip": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\ImportExportExcellApi.csproj",
-              "RelativeToolTip": "ImportExportExcellApi\\ImportExportExcellApi.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-02-24T18:34:26.491Z",
+              "Title": "TrainingRecordDto.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Dto\\TrainingRecordDto.cs",
+              "RelativeDocumentMoniker": "ImportExportExcellApi\\Dto\\TrainingRecordDto.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Dto\\TrainingRecordDto.cs",
+              "RelativeToolTip": "ImportExportExcellApi\\Dto\\TrainingRecordDto.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAYwBQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-24T18:09:53.275Z",
               "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SysOtherList.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Entities\\SysOtherList.cs",
+              "RelativeDocumentMoniker": "ImportExportExcellApi\\Entities\\SysOtherList.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Entities\\SysOtherList.cs",
+              "RelativeToolTip": "ImportExportExcellApi\\Entities\\SysOtherList.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-24T17:32:46.807Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Bookmark",
@@ -63,62 +84,39 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "AppDataContext.cs",
-              "DocumentMoniker": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Data\\AppDataContext.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Data\\AppDataContext.cs",
               "RelativeDocumentMoniker": "ImportExportExcellApi\\Data\\AppDataContext.cs",
-              "ToolTip": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Data\\AppDataContext.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Data\\AppDataContext.cs",
               "RelativeToolTip": "ImportExportExcellApi\\Data\\AppDataContext.cs",
-              "ViewState": "AgIAAFAAAAAAAAAAAAAwwG0AAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAAL0AAAAAAAAAAAAwwMgAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-24T15:06:13.267Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Allowance.cs",
-              "DocumentMoniker": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Entities\\Allowance.cs",
-              "RelativeDocumentMoniker": "ImportExportExcellApi\\Entities\\Allowance.cs",
-              "ToolTip": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Entities\\Allowance.cs",
-              "RelativeToolTip": "ImportExportExcellApi\\Entities\\Allowance.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAaAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T15:02:25.176Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Employee.cs",
-              "DocumentMoniker": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Entities\\Employee.cs",
-              "RelativeDocumentMoniker": "ImportExportExcellApi\\Entities\\Employee.cs",
-              "ToolTip": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Entities\\Employee.cs",
-              "RelativeToolTip": "ImportExportExcellApi\\Entities\\Employee.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T14:51:52.345Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 6,
-              "Title": "CreateFIleOrUpdate.cs",
-              "DocumentMoniker": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Utils\\CreateFIleOrUpdate.cs",
-              "RelativeDocumentMoniker": "ImportExportExcellApi\\Utils\\CreateFIleOrUpdate.cs",
-              "ToolTip": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Utils\\CreateFIleOrUpdate.cs",
-              "RelativeToolTip": "ImportExportExcellApi\\Utils\\CreateFIleOrUpdate.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Title": "Allowance.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Entities\\Allowance.cs",
+              "RelativeDocumentMoniker": "ImportExportExcellApi\\Entities\\Allowance.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Entities\\Allowance.cs",
+              "RelativeToolTip": "ImportExportExcellApi\\Entities\\Allowance.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAcAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T14:46:47.154Z"
+              "WhenOpened": "2026-02-24T15:02:25.176Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "ImportExportController.cs",
-              "DocumentMoniker": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Controllers\\ImportExportController.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Controllers\\ImportExportController.cs",
               "RelativeDocumentMoniker": "ImportExportExcellApi\\Controllers\\ImportExportController.cs",
-              "ToolTip": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Controllers\\ImportExportController.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Controllers\\ImportExportController.cs",
               "RelativeToolTip": "ImportExportExcellApi\\Controllers\\ImportExportController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAKwAAAAAAAAAAAAkwLkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-24T14:44:21.982Z",
               "EditorCaption": ""
@@ -127,13 +125,66 @@
               "$type": "Document",
               "DocumentIndex": 5,
               "Title": "Program.cs",
-              "DocumentMoniker": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Program.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Program.cs",
               "RelativeDocumentMoniker": "ImportExportExcellApi\\Program.cs",
-              "ToolTip": "D:\\private\\code_dotnet\\ImportExportExcellApi\\ImportExportExcellApi\\Program.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Program.cs",
               "RelativeToolTip": "ImportExportExcellApi\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T14:42:09.108Z"
+              "WhenOpened": "2026-02-24T14:42:09.108Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CreateFIleOrUpdate.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Utils\\CreateFIleOrUpdate.cs",
+              "RelativeDocumentMoniker": "ImportExportExcellApi\\Utils\\CreateFIleOrUpdate.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Utils\\CreateFIleOrUpdate.cs",
+              "RelativeToolTip": "ImportExportExcellApi\\Utils\\CreateFIleOrUpdate.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-24T14:46:47.154Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ImportExportExcellApi.csproj",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\ImportExportExcellApi.csproj",
+              "RelativeDocumentMoniker": "ImportExportExcellApi\\ImportExportExcellApi.csproj",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\ImportExportExcellApi.csproj*",
+              "RelativeToolTip": "ImportExportExcellApi\\ImportExportExcellApi.csproj*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-02-24T18:34:26.491Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "EmployeeCv.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Entities\\EmployeeCv.cs",
+              "RelativeDocumentMoniker": "ImportExportExcellApi\\Entities\\EmployeeCv.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Entities\\EmployeeCv.cs",
+              "RelativeToolTip": "ImportExportExcellApi\\Entities\\EmployeeCv.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-24T17:30:31.435Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Employee.cs",
+              "DocumentMoniker": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Entities\\Employee.cs",
+              "RelativeDocumentMoniker": "ImportExportExcellApi\\Entities\\Employee.cs",
+              "ToolTip": "D:\\private\\code_dotnet\\excell-API\\ImportExportExcellApi\\Entities\\Employee.cs",
+              "RelativeToolTip": "ImportExportExcellApi\\Entities\\Employee.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-24T14:51:52.345Z",
+              "EditorCaption": ""
             }
           ]
         }
