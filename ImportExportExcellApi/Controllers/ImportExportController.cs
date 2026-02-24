@@ -62,11 +62,15 @@ namespace ImportExportExcellApi.Controllers
                 var lookupWs = package.Workbook.Worksheets.Add(lookupSheetName);
                 lookupWs.Hidden = eWorkSheetHidden.Hidden;
 
+                // Header cho sheet lookup
                 lookupWs.Cells[1, 1].Value = "CODE";
                 lookupWs.Cells[1, 2].Value = "FULL_NAME";
                 lookupWs.Cells[1, 3].Value = "EMPLOYEE_ID";
-                lookupWs.Cells[1, 1, 1, 3].Style.Font.Bold = true;
+                lookupWs.Cells[1, 4].Value = "CERT_NAME";      // Tên chứng chỉ
+                lookupWs.Cells[1, 5].Value = "CERT_ID";        // ✅ ID chứng chỉ
+                lookupWs.Cells[1, 1, 1, 5].Style.Font.Bold = true;
 
+                // Đổ dữ liệu Employee
                 var lookupData = AppDataContext.Employees
                     .Join(AppDataContext.EmployeeCvs,
                         emp => emp.EmployeeId,
@@ -82,43 +86,74 @@ namespace ImportExportExcellApi.Controllers
                     lookupWs.Cells[i + 2, 3].Value = lookupData[i].Id;
                 }
 
+                // ✅ Đổ dữ liệu Certificate Type (cột D = Name, cột E = ID)
+                var certificateTypes = AppDataContext.SysOtherLists
+                    .Where(s => s.TypeCode == "CERTIFICATE_TYPE")
+                    .OrderBy(s => s.Name)
+                    .ToList();
+
+                for (int i = 0; i < certificateTypes.Count; i++)
+                {
+                    lookupWs.Cells[i + 2, 4].Value = certificateTypes[i].Name;  // Tên hiển thị
+                    lookupWs.Cells[i + 2, 5].Value = certificateTypes[i].Id;    // ✅ ID để import
+                }
+
                 // Tạo Named Ranges
                 package.Workbook.Names.Add("DanhSachNhanVien", lookupWs.Cells[$"A2:B{lookupData.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachCodeId", lookupWs.Cells[$"A2:C{lookupData.Count + 1}"]);
                 package.Workbook.Names.Add("DanhSachCode", lookupWs.Cells[$"A2:A{lookupData.Count + 1}"]);
 
+                // ✅ Named Range cho Certificate: Name + ID (cột D:E)
+                package.Workbook.Names.Add("DanhSachChungChi",
+                    lookupWs.Cells[$"D2:E{certificateTypes.Count + 1}"]);
+
+                // ✅ Named Range chỉ chứa Name cho dropdown (cột D)
+                package.Workbook.Names.Add("DanhSachChungChiName",
+                    lookupWs.Cells[$"D2:D{certificateTypes.Count + 1}"]);
+
                 // ========================================
-                // 2. XỬ LÝ SHEET CHÍNH - GIỮ NGUYÊN FORMAT
+                // 2. XỬ LÝ SHEET CHÍNH
                 // ========================================
                 var ws = package.Workbook.Worksheets[0];
                 int startRow = 6;
                 int endRow = 100;
 
-                // ✅ 1. Áp dụng Dropdown (Data Validation) - Không ảnh hưởng visual
+                // ✅ Dropdown Cột A (1): Mã nhân viên
                 ApplyDropdown(ws, startRow, endRow, 1, "DanhSachCode");
+
+                // ✅ Dropdown Cột C (3): Loại bằng cấp/Chứng chỉ (chọn theo NAME)
+                ApplyDropdown(ws, startRow, endRow, 3, "DanhSachChungChiName");
+
+                // ✅ Dropdown Cột F (6): Bộ phận (nếu có)
                 if (ws.Workbook.Names.Any(n => n.Name.Equals("DanhSachBoPhan", StringComparison.OrdinalIgnoreCase)))
                 {
                     ApplyDropdown(ws, startRow, endRow, 6, "DanhSachBoPhan");
                 }
 
-                // ✅ 2. Đổ công thức và giá trị - KHÔNG GÁN STYLE LẠI
+                // ✅ Công thức cho các cột
                 for (int row = startRow; row <= endRow; row++)
                 {
-                    // Cột B: FullName (VLOOKUP)
+                    // Cột B (2): FullName - VLOOKUP từ Code
                     string nameFormula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachNhanVien, 2, FALSE))";
-                    var nameCell = ws.Cells[row, 2];
-                    nameCell.Formula = nameFormula;
+                    ws.Cells[row, 2].Formula = nameFormula;
 
-                    // Cột Z (26): Hidden ID
-                    string idFormula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachCodeId, 3, FALSE))";
-                    ws.Cells[row, 26].Formula = idFormula;
+                    // Cột Z (26): Hidden EmployeeId
+                    string empIdFormula = $"=IF(A{row}=\"\", \"\", VLOOKUP(A{row}, DanhSachCodeId, 3, FALSE))";
+                    ws.Cells[row, 26].Formula = empIdFormula;
+
+                    // ✅ Cột AA (27): Hidden CertificateTypeId - VLOOKUP từ tên chứng chỉ (cột C)
+                    // DanhSachChungChi có 2 cột: D=Name, E=ID → VLOOKUP cột C, range D:E, lấy cột thứ 2
+                    string certIdFormula = $"=IF(C{row}=\"\", \"\", VLOOKUP(C{row}, DanhSachChungChi, 2, FALSE))";
+                    ws.Cells[row, 27].Formula = certIdFormula;
                 }
 
-                // 🔐 Ẩn cột ID (Cột Z)
-                ws.Column(26).Hidden = true;
+                // 🔐 Ẩn các cột chứa ID
+                ws.Column(26).Hidden = true;  // Cột Z: EmployeeId
                 ws.Column(26).Width = 0.1;
+                ws.Column(27).Hidden = true;  // ✅ Cột AA: CertificateTypeId
+                ws.Column(27).Width = 0.1;
 
-                
+                // Border cho vùng dữ liệu
                 var dataRange = ws.Cells[$"A{startRow}:Y{endRow}"];
                 dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
@@ -152,64 +187,74 @@ namespace ImportExportExcellApi.Controllers
 
                     int startRow = 6;
                     int row = startRow;
-                    int codeColumn = 1;        // Cột A: Code
-                    int hiddenIdColumn = 26;   // ✅ Cột Z: EmployeeId (ẩn)
+                    int codeColumn = 1;           // Cột A: Code
+                    int certNameColumn = 3;       // Cột C: Certificate Name (hiển thị)
+                    int hiddenEmpIdColumn = 26;   // Cột Z: EmployeeId (ẩn)
+                    int hiddenCertIdColumn = 27;  // ✅ Cột AA: CertificateTypeId (ẩn)
 
                     while (ws.Cells[row, codeColumn].Value != null)
                     {
                         var code = ws.Cells[row, codeColumn].Value?.ToString()?.Trim();
+                        var certName = ws.Cells[row, certNameColumn].Value?.ToString()?.Trim();
 
                         if (!string.IsNullOrEmpty(code))
                         {
-                            // ✅ Đọc EmployeeId từ cột ẩn (cột Z)
-                            var idValue = ws.Cells[row, hiddenIdColumn].Value;
-
-                            if (idValue != null && long.TryParse(idValue.ToString(), out long employeeId))
+                            // ✅ Đọc EmployeeId từ cột ẩn Z
+                            long? employeeId = null;
+                            var empIdValue = ws.Cells[row, hiddenEmpIdColumn].Value;
+                            if (empIdValue != null && long.TryParse(empIdValue.ToString(), out long parsedEmpId))
                             {
-                                // ✅ Kiểm tra lại ID có tồn tại trong DB (bảo mật)
-                                var employee = AppDataContext.Employees
-                                    .FirstOrDefault(e => e.Id == employeeId && e.Code == code);
+                                employeeId = parsedEmpId;
+                            }
 
-                                if (employee != null)
+                            // ✅ Đọc CertificateTypeId từ cột ẩn AA
+                            long? certificateTypeId = null;
+                            var certIdValue = ws.Cells[row, hiddenCertIdColumn].Value;
+                            if (certIdValue != null && long.TryParse(certIdValue.ToString(), out long parsedCertId))
+                            {
+                                certificateTypeId = parsedCertId;
+                            }
+
+                            // Validate Employee
+                            var employee = employeeId.HasValue
+                                ? AppDataContext.Employees.FirstOrDefault(e => e.Id == employeeId && e.Code == code)
+                                : AppDataContext.Employees.FirstOrDefault(e => e.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
+
+                            if (employee == null)
+                            {
+                                errors.Add($"Dòng {row}: Mã '{code}' không tồn tại");
+                                row++;
+                                continue;
+                            }
+
+                            // Validate Certificate Type (nếu user có chọn)
+                            SysOtherList certificate = null;
+                            if (!string.IsNullOrEmpty(certName) && certificateTypeId.HasValue)
+                            {
+                                certificate = AppDataContext.SysOtherLists
+                                    .FirstOrDefault(c => c.Id == certificateTypeId && c.Name == certName);
+
+                                // Fallback: nếu không tìm được theo ID, thử tìm theo tên
+                                if (certificate == null && !string.IsNullOrEmpty(certName))
                                 {
-                                    employees.Add(new EmployeeImportResult
-                                    {
-                                        RowNumber = row,
-                                        Code = code,
-                                        EmployeeId = employeeId,              // ✅ Lấy trực tiếp từ file
-                                        EmployeeCvId = employee.EmployeeId,
-                                        FullName = AppDataContext.EmployeeCvs
-                                            .FirstOrDefault(cv => cv.Id == employee.EmployeeId)?.FullName
-                                    });
-                                }
-                                else
-                                {
-                                    errors.Add($"Dòng {row}: Dữ liệu không khớp (Code: {code}, ID: {employeeId})");
+                                    certificate = AppDataContext.SysOtherLists
+                                        .FirstOrDefault(c => c.TypeCode == "CERTIFICATE_TYPE" && c.Name == certName);
                                 }
                             }
-                            else
-                            {
-                                // Fallback: Nếu không đọc được ID từ cột ẩn → query theo Code
-                                var employee = AppDataContext.Employees
-                                    .FirstOrDefault(e => e.Code.Equals(code, StringComparison.OrdinalIgnoreCase));
 
-                                if (employee != null)
-                                {
-                                    employees.Add(new EmployeeImportResult
-                                    {
-                                        RowNumber = row,
-                                        Code = code,
-                                        EmployeeId = employee.Id,
-                                        EmployeeCvId = employee.EmployeeId,
-                                        FullName = AppDataContext.EmployeeCvs
-                                            .FirstOrDefault(cv => cv.Id == employee.EmployeeId)?.FullName
-                                    });
-                                }
-                                else
-                                {
-                                    errors.Add($"Dòng {row}: Mã '{code}' không tồn tại");
-                                }
-                            }
+                            employees.Add(new EmployeeImportResult
+                            {
+                                RowNumber = row,
+                                Code = code,
+                                EmployeeId = employee.Id,
+                                EmployeeCvId = employee.EmployeeId,
+                                FullName = AppDataContext.EmployeeCvs
+                                    .FirstOrDefault(cv => cv.Id == employee.EmployeeId)?.FullName,
+
+                                // ✅ Certificate info
+                                CertificateName = certName,
+                                CertificateTypeId = certificate?.Id  // ✅ ID chính xác để lưu vào DB
+                            });
                         }
 
                         row++;
@@ -236,6 +281,8 @@ namespace ImportExportExcellApi.Controllers
             public long EmployeeId { get; set; }
             public long EmployeeCvId { get; set; }
             public string FullName { get; set; }
+            public string CertificateName { get; set; }      // Tên hiển thị (để verify)
+            public long? CertificateTypeId { get; set; }     // ✅ ID để lưu vào DB
         }
         /// <summary>
         /// Áp dụng Data Validation dạng Dropdown List cho một vùng ô

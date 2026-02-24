@@ -53,11 +53,13 @@ namespace ImportExportExcellApi.Data
             // 3. Init dữ liệu cho SysOtherList (Dùng cho Dropdown khác)
             _sysOtherLists.AddRange(new[]
             {
-                new SysOtherList { Id = 1, Name = "Bộ phận IT" ,TypeCode = "CERTIFICATE_TYPE"},
-                new SysOtherList { Id = 2, Name = "Trình độ chuyên môn" ,TypeCode = "LEVEL_ID"},
-                new SysOtherList { Id = 3, Name = "Hình thức đào tạo" ,TypeCode = "TRAINING_METHOD"},
-                new SysOtherList { Id = 4, Name = "Bộ phận Sản xuất" },
-                new SysOtherList { Id = 5, Name = "Bộ phận Kinh doanh" }
+                new SysOtherList { Id = 31, Name = "Loại bằng cấp/Chứng chỉ 1" ,TypeCode = "CERTIFICATE_TYPE"},
+                new SysOtherList { Id = 311, Name = "Loại bằng cấp/Chứng chỉ 2" ,TypeCode = "CERTIFICATE_TYPE"},
+                new SysOtherList { Id = 312, Name = "Loại bằng cấp/Chứng chỉ 3" ,TypeCode = "CERTIFICATE_TYPE"},
+                new SysOtherList { Id = 32, Name = "Trình độ chuyên môn" ,TypeCode = "LEVEL_ID"},
+                new SysOtherList { Id = 33, Name = "Hình thức đào tạo" ,TypeCode = "TRAINING_METHOD"},
+                new SysOtherList { Id = 34, Name = "Bộ phận Sản xuất" },
+                new SysOtherList { Id = 35, Name = "Bộ phận Kinh doanh" }
             });
 
             // 4. Init dữ liệu cho Allowance (Giả định class này vẫn tồn tại để tránh lỗi)
