@@ -74,27 +74,49 @@ public class HuWorkingController : ControllerBase
                 lookup.Cells[i + 2, 5].Value = decisions[i].Id;
             }
 
+            // Phòng ban (F, G)
+            var depts = AppDataContext.Departments.OrderBy(d => d.Name).ToList();
+            for (int i = 0; i < depts.Count; i++)
+            {
+                lookup.Cells[i + 2, 6].Value = depts[i].Name;
+                lookup.Cells[i + 2, 7].Value = depts[i].Id;
+            }
+
+            // Chức danh (H, I)
+            var positions = AppDataContext.Positions.OrderBy(p => p.Name).ToList();
+            for (int i = 0; i < positions.Count; i++)
+            {
+                lookup.Cells[i + 2, 8].Value = positions[i].Name;
+                lookup.Cells[i + 2, 9].Value = positions[i].Id;
+            }
+
             var wb = package.Workbook;
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachCode", StringComparison.OrdinalIgnoreCase)))
-                wb.Names.Remove("DanhSachCode");
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachCode", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachCode");
             wb.Names.AddFormula("DanhSachCode", "OFFSET('Data_Lookup'!$A$2,0,0,COUNTA('Data_Lookup'!$A:$A)-1,1)");
 
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachNhanVien", StringComparison.OrdinalIgnoreCase)))
-                wb.Names.Remove("DanhSachNhanVien");
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachNhanVien", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachNhanVien");
             wb.Names.Add("DanhSachNhanVien", lookup.Cells["A2:B1000"]);
 
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachCodeId", StringComparison.OrdinalIgnoreCase)))
-                wb.Names.Remove("DanhSachCodeId");
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachCodeId", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachCodeId");
             wb.Names.Add("DanhSachCodeId", lookup.Cells["A2:C1000"]);
 
             // TYPE_DECISION ranges
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinh", StringComparison.OrdinalIgnoreCase)))
-                wb.Names.Remove("DanhSachLoaiQuyetDinh");
-            wb.Names.AddFormula("DanhSachLoaiQuyetDinh",
-                "OFFSET('Data_Lookup'!$D$2,0,0,COUNTA('Data_Lookup'!$D:$D)-1,1)");
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinhRange", StringComparison.OrdinalIgnoreCase)))
-                wb.Names.Remove("DanhSachLoaiQuyetDinhRange");
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinh", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachLoaiQuyetDinh");
+            wb.Names.AddFormula("DanhSachLoaiQuyetDinh", "OFFSET('Data_Lookup'!$D$2,0,0,COUNTA('Data_Lookup'!$D:$D)-1,1)");
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinhRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachLoaiQuyetDinhRange");
             wb.Names.Add("DanhSachLoaiQuyetDinhRange", lookup.Cells["D2:E1000"]);
+
+            // PHONG_BAN ranges
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachPhongBan", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachPhongBan");
+            wb.Names.AddFormula("DanhSachPhongBan", "OFFSET('Data_Lookup'!$F$2,0,0,COUNTA('Data_Lookup'!$F:$F)-1,1)");
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachPhongBanRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachPhongBanRange");
+            wb.Names.Add("DanhSachPhongBanRange", lookup.Cells["F2:G1000"]);
+
+            // CHUC_DANH ranges
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachChucDanh", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachChucDanh");
+            wb.Names.AddFormula("DanhSachChucDanh", "OFFSET('Data_Lookup'!$H$2,0,0,COUNTA('Data_Lookup'!$H:$H)-1,1)");
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachChucDanhRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachChucDanhRange");
+            wb.Names.Add("DanhSachChucDanhRange", lookup.Cells["H2:I1000"]);
 
             var dv = ws.Cells[6, 2, 100, 2].DataValidation.AddListDataValidation();
             dv.Formula.ExcelFormula = "=DanhSachCode";
@@ -109,14 +131,35 @@ public class HuWorkingController : ControllerBase
             dvDecision.ErrorTitle = "Giá trị không hợp lệ";
             dvDecision.Error = "Vui lòng chọn giá trị có trong danh sách.";
 
+            // Dropdown Phòng Ban ở cột I
+            var dvDept = ws.Cells[6, 9, 100, 9].DataValidation.AddListDataValidation();
+            dvDept.Formula.ExcelFormula = "=DanhSachPhongBan";
+            dvDept.AllowBlank = true;
+
+            // Dropdown Chức Danh ở cột J
+            var dvPos = ws.Cells[6, 10, 100, 10].DataValidation.AddListDataValidation();
+            dvPos.Formula.ExcelFormula = "=DanhSachChucDanh";
+            dvPos.AllowBlank = true;
+
             for (int r = 6; r <= 100; r++)
             {
                 ws.Cells[r, 3].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachNhanVien, 2, FALSE))";
                 ws.Cells[r, 1].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachCodeId, 3, FALSE))";
                 ws.Cells[r, 26].Formula = $"=IF(D{r}=\"\", \"\", VLOOKUP(D{r}, DanhSachLoaiQuyetDinhRange, 2, FALSE))";
+                ws.Cells[r, 27].Formula = $"=IF(I{r}=\"\", \"\", VLOOKUP(I{r}, DanhSachPhongBanRange, 2, FALSE))";
+                ws.Cells[r, 28].Formula = $"=IF(J{r}=\"\", \"\", VLOOKUP(J{r}, DanhSachChucDanhRange, 2, FALSE))";
             }
-
             ws.Column(26).Hidden = true;
+            ws.Column(27).Hidden = true;
+            ws.Column(28).Hidden = true;
+
+            var toRemove = ws.DataValidations
+                .Where(v => v.Address.Start.Column >= 5 && v.Address.End.Column <= 8)
+                .ToList();
+            foreach (var v in toRemove)
+            {
+                ws.DataValidations.Remove(v);
+            }
 
             return File(package.GetAsByteArray(),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -141,6 +184,17 @@ public class HuWorkingController : ControllerBase
             var employees = new List<object>();
             var errors = new List<string>();
 
+            DateTime? ParseDate(object v)
+            {
+                if (v == null) return null;
+                if (v is DateTime dt) return dt;
+                if (v is double d)
+                {
+                    try { return DateTime.FromOADate(d); } catch { }
+                }
+                return DateTime.TryParse(v.ToString(), out var r) ? r : (DateTime?)null;
+            }
+
             if (ws.Dimension != null)
             {
                 for (int row = 6; row <= ws.Dimension.End.Row; row++)
@@ -160,12 +214,43 @@ public class HuWorkingController : ControllerBase
                         errors.Add($"Dòng {row}: Loại quyết định '{decisionName}' không hợp lệ");
                     }
 
+                    var decisionNo = ws.Cells[row, 5].Value?.ToString()?.Trim();
+                    var effectiveDate = ParseDate(ws.Cells[row, 6].Value);
+                    var expireDate = ParseDate(ws.Cells[row, 7].Value);
+                    var decisionBaseNo = ws.Cells[row, 8].Value?.ToString()?.Trim();
+
+                    var departmentName = ws.Cells[row, 9].Value?.ToString()?.Trim();
+                    long? departmentId = null;
+                    var departmentIdCell = ws.Cells[row, 27].Value;
+                    if (departmentIdCell != null && long.TryParse(departmentIdCell.ToString(), out var depId)) departmentId = depId;
+
+                    var positionName = ws.Cells[row, 10].Value?.ToString()?.Trim();
+                    long? positionId = null;
+                    var positionIdCell = ws.Cells[row, 28].Value;
+                    if (positionIdCell != null && long.TryParse(positionIdCell.ToString(), out var posId)) positionId = posId;
+
+                    if (string.IsNullOrEmpty(decisionNo)) errors.Add($"Dòng {row}: Thiếu số quyết định");
+                    if (effectiveDate == null) errors.Add($"Dòng {row}: Thiếu ngày hiệu lực hoặc sai định dạng");
+
                     if (map.TryGetValue(code, out var info))
                     {
                         employees.Add(new
                         {
-                            Row = row, Code = code, EmployeeId = info.EmpId, EmployeeCvId = info.CvId,
-                            FullName = info.FullName, DecisionTypeName = decisionName, DecisionTypeId = decisionId
+                            Row = row,
+                            Code = code,
+                            EmployeeId = info.EmpId,
+                            EmployeeCvId = info.CvId,
+                            FullName = info.FullName,
+                            DecisionTypeName = decisionName,
+                            DecisionTypeId = decisionId,
+                            DecisionNo = decisionNo,
+                            EffectiveDate = effectiveDate,
+                            ExpireDate = expireDate,
+                            DecisionBaseNo = decisionBaseNo,
+                            DepartmentName = departmentName,
+                            DepartmentId = departmentId,
+                            PositionName = positionName,
+                            PositionId = positionId
                         });
                     }
                     else
@@ -192,52 +277,6 @@ public class HuWorkingController : ControllerBase
 }
 
 //--Thang lương
-// Các class Entity nên để ở file riêng, nhưng để đây vẫn đúng cú pháp
-public class PaSalaryScale
-{
-    public int Id { get; set; }
-    public string Code { get; set; }
-    public string Name { get; set; }
-    public decimal? SalaryBase { get; set; }
-    public decimal? SalaryAllowance { get; set; }
-    public decimal? SalaryBonus { get; set; }
-    public decimal? SalaryPenalty { get; set; }
-    public decimal? SalaryTotal { get; set; }
-    public virtual ICollection<PaSalaryGrade> SalaryGrades { get; set; }
-}
-
-//--Ngạch lương
-public class PaSalaryGrade
-{
-    public int Id { get; set; }
-    public string Code { get; set; }
-    public string Name { get; set; }
-    public int PaSalaryScaleId { get; set; }
-    public decimal? SalaryBase { get; set; }
-    public decimal? SalaryAllowance { get; set; }
-    public decimal? SalaryBonus { get; set; }
-    public decimal? SalaryPenalty { get; set; }
-    public decimal? SalaryTotal { get; set; }
-
-    public virtual PaSalaryScale SalaryScale { get; set; }
-    public virtual ICollection<PaSalaryLevel> SalaryLevels { get; set; }
-}
-
-//-- Bậc lương
-public class PaSalaryLevel
-{
-    public int Id { get; set; }
-    public string Code { get; set; }
-    public string Name { get; set; }
-    public int PaSalaryGradeId { get; set; }
-    public decimal? SalaryBase { get; set; }
-    public decimal? SalaryAllowance { get; set; }
-    public decimal? SalaryBonus { get; set; }
-    public decimal? SalaryPenalty { get; set; }
-    public decimal? SalaryTotal { get; set; }
-
-    public virtual PaSalaryGrade SalaryGrade { get; set; }
-}
-
+// Các class Entity đã được chuyển ra file riêng trong thư mục Entities
 //với 3 class PaSalaryScale, PaSalaryGrade, PaSalaryLevel
 // Mỗi //--Thang lương có nhiều //--Ngạch lương , mỗi //--Ngạch lương có nhiều //--Bậc lương

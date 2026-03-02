@@ -16,12 +16,22 @@ namespace ImportExportExcellApi.Data
         private static List<Employee> _employees = new List<Employee>();
         private static List<EmployeeCv> _employeeCvs = new List<EmployeeCv>();
         private static List<SysOtherList> _sysOtherLists = new List<SysOtherList>();
+        private static List<Department> _departments = new List<Department>();
+        private static List<Position> _positions = new List<Position>();
+        private static List<PaSalaryScale> _salaryScales = new List<PaSalaryScale>();
+        private static List<PaSalaryGrade> _salaryGrades = new List<PaSalaryGrade>();
+        private static List<PaSalaryLevel> _salaryLevels = new List<PaSalaryLevel>();
 
         // Properties để query với LINQ
         public static IQueryable<Allowance> Allowances => _allowances.AsQueryable();
         public static IQueryable<Employee> Employees => _employees.AsQueryable();
         public static IQueryable<EmployeeCv> EmployeeCvs => _employeeCvs.AsQueryable();
         public static IQueryable<SysOtherList> SysOtherLists => _sysOtherLists.AsQueryable();
+        public static IQueryable<Department> Departments => _departments.AsQueryable();
+        public static IQueryable<Position> Positions => _positions.AsQueryable();
+        public static IQueryable<PaSalaryScale> SalaryScales => _salaryScales.AsQueryable();
+        public static IQueryable<PaSalaryGrade> SalaryGrades => _salaryGrades.AsQueryable();
+        public static IQueryable<PaSalaryLevel> SalaryLevels => _salaryLevels.AsQueryable();
 
         /// <summary>
         /// Khởi tạo dữ liệu mẫu (chạy 1 lần khi khởi động)
@@ -80,7 +90,44 @@ namespace ImportExportExcellApi.Data
 
             });
 
-            // 4. Init dữ liệu cho Allowance (Giả định class này vẫn tồn tại để tránh lỗi)
+            // 4. Init Departments
+            _departments.AddRange(new[]
+            {
+                new Department { Id = 1, Code = "PB01", Name = "Phòng Nhân sự" },
+                new Department { Id = 2, Code = "PB02", Name = "Phòng Kỹ thuật" },
+                new Department { Id = 3, Code = "PB03", Name = "Phòng Kinh doanh" },
+                new Department { Id = 4, Code = "PB04", Name = "Phòng Kế toán" }
+            });
+
+            // 5. Init Positions
+            _positions.AddRange(new[]
+            {
+                new Position { Id = 1, Code = "CD01", Name = "Trưởng phòng" },
+                new Position { Id = 2, Code = "CD02", Name = "Phó phòng" },
+                new Position { Id = 3, Code = "CD03", Name = "Chuyên viên" },
+                new Position { Id = 4, Code = "CD04", Name = "Nhân viên" }
+            });
+
+            // 6. Init Salary Structures
+            _salaryScales.AddRange(new[] {
+                new PaSalaryScale { Id = 1, Code = "TS01", Name = "Thang Lương Văn Phòng" },
+                new PaSalaryScale { Id = 2, Code = "TS02", Name = "Thang Lương Kỹ Thuật" }
+            });
+
+            _salaryGrades.AddRange(new[] {
+                new PaSalaryGrade { Id = 11, PaSalaryScaleId = 1, Code = "NG01", Name = "Ngạch Chuyên Viên" },
+                new PaSalaryGrade { Id = 12, PaSalaryScaleId = 1, Code = "NG02", Name = "Ngạch Quản Lý" },
+                new PaSalaryGrade { Id = 21, PaSalaryScaleId = 2, Code = "NG03", Name = "Ngạch Kỹ Sư" }
+            });
+
+            _salaryLevels.AddRange(new[] {
+                new PaSalaryLevel { Id = 111, PaSalaryGradeId = 11, Code = "B01", Name = "Bậc 1" },
+                new PaSalaryLevel { Id = 112, PaSalaryGradeId = 11, Code = "B02", Name = "Bậc 2" },
+                new PaSalaryLevel { Id = 121, PaSalaryGradeId = 12, Code = "B01", Name = "Bậc 1" },
+                new PaSalaryLevel { Id = 211, PaSalaryGradeId = 21, Code = "B01", Name = "Bậc 1" }
+            });
+
+            // 7. Init dữ liệu cho Allowance (Giả định class này vẫn tồn tại để tránh lỗi)
             // Nếu class Allowance đã bị xóa, bạn có thể bỏ đoạn này và xóa các reference liên quan
             _allowances.AddRange(new[]
             {
