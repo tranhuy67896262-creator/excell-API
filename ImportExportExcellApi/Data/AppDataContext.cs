@@ -72,6 +72,12 @@ namespace ImportExportExcellApi.Data
                 new SysOtherList { Id = 63, Name = "Hình thức đào tạo 2" ,TypeCode = "TRAINING_METHOD"},
                 new SysOtherList { Id = 64, Name = "Hình thức đào tạo 3" ,TypeCode = "TRAINING_METHOD"},
 
+                // TYPE_DECISION - Loại quyết định
+                new SysOtherList { Id = 201, Name = "Quyết định bổ nhiệm" ,TypeCode = "TYPE_DECISION"},
+                new SysOtherList { Id = 202, Name = "Quyết định điều chuyển" ,TypeCode = "TYPE_DECISION"},
+                new SysOtherList { Id = 203, Name = "Quyết định khen thưởng" ,TypeCode = "TYPE_DECISION"},
+                new SysOtherList { Id = 204, Name = "Quyết định kỷ luật" ,TypeCode = "TYPE_DECISION"},
+
             });
 
             // 4. Init dữ liệu cho Allowance (Giả định class này vẫn tồn tại để tránh lỗi)
