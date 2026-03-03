@@ -168,10 +168,18 @@ public class HuWorkingController : ControllerBase
             var lookup = package.Workbook.Worksheets["Data_Lookup"];
             var wb = package.Workbook;
 
-            // Xóa dữ liệu cũ trong lookup để tránh bị rác
-            lookup.Cells.Clear();
+            // Xóa dữ liệu cũ trong lookup và sheet chính để tránh bị rác
+            lookup.Cells.Clear(); 
+            // Xóa vùng dữ liệu nhân viên trong lookup (theo yêu cầu)
+            lookup.Cells["A2:C1000"].Clear(); 
+
+            // Xóa trắng các cột nhập liệu trong sheet chính (từ dòng 6) để không bị "thừa" dữ liệu cũ
+            // Cột B (Mã NV), D->P (Các thông tin), R (Ghi chú)
+            ws.Cells["B6:P1000"].Value = null;
+            ws.Cells["R6:R1000"].Value = null;
 
             // 1. Điền dữ liệu Nhân viên
+            // Cấu trúc Data_Lookup: Cột A=Code, Cột B=FullName, Cột C=Id
             var emps = AppDataContext.Employees
                 .Join(AppDataContext.EmployeeCvs, e => e.EmployeeId, c => c.Id,
                     (e, c) => new { e.Code, c.FullName, e.Id })
@@ -184,15 +192,53 @@ public class HuWorkingController : ControllerBase
                 lookup.Cells[i + 2, 3].Value = emps[i].Id;
             }
 
+            // Định nghĩa lại Named Range cho Nhân viên để không bị thừa dòng trống
+            // DanhSachCode: chỉ cột Code (cột A) - dùng cho dropdown
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachCode", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachCode");
+            if (emps.Any()) wb.Names.Add("DanhSachCode", lookup.Cells[2, 1, 1 + emps.Count, 1]);
+
+            // DanhSachNhanVien: 2 cột (Code, FullName) - VLOOKUP lấy tên từ cột 2
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachNhanVien", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachNhanVien");
+            if (emps.Any()) wb.Names.Add("DanhSachNhanVien", lookup.Cells[2, 1, 1 + emps.Count, 2]);
+
+            // DanhSachCodeId: 3 cột (Code, FullName, Id) - VLOOKUP lấy ID từ cột 3
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachCodeId", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachCodeId");
+            if (emps.Any()) wb.Names.Add("DanhSachCodeId", lookup.Cells[2, 1, 1 + emps.Count, 3]);
+
+            // Cập nhật lại formulas trong sheet chính để đảm bảo VLOOKUP đúng
+            for (int r = 6; r <= 1000; r++)
+            {
+                ws.Cells[r, 1].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachCodeId, 3, FALSE))";
+                ws.Cells[r, 3].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachNhanVien, 2, FALSE))";
+            }
+
             // 2. Điền dữ liệu Danh mục động
             var decisions = AppDataContext.SysOtherLists.Where(s => s.TypeCode == "TYPE_DECISION").OrderBy(s => s.Name).ToList();
             for (int i = 0; i < decisions.Count; i++) { lookup.Cells[i + 2, 4].Value = decisions[i].Name; lookup.Cells[i + 2, 5].Value = decisions[i].Id; }
+            
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinh", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachLoaiQuyetDinh");
+            if (decisions.Any()) wb.Names.Add("DanhSachLoaiQuyetDinh", lookup.Cells[2, 4, 1 + decisions.Count, 4]);
+            
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinhRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachLoaiQuyetDinhRange");
+            if (decisions.Any()) wb.Names.Add("DanhSachLoaiQuyetDinhRange", lookup.Cells[2, 4, 1 + decisions.Count, 5]);
 
             var depts = AppDataContext.Departments.OrderBy(d => d.Name).ToList();
             for (int i = 0; i < depts.Count; i++) { lookup.Cells[i + 2, 6].Value = depts[i].Name; lookup.Cells[i + 2, 7].Value = depts[i].Id; }
 
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachPhongBan", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachPhongBan");
+            if (depts.Any()) wb.Names.Add("DanhSachPhongBan", lookup.Cells[2, 6, 1 + depts.Count, 6]);
+
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachPhongBanRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachPhongBanRange");
+            if (depts.Any()) wb.Names.Add("DanhSachPhongBanRange", lookup.Cells[2, 6, 1 + depts.Count, 7]);
+
             var positions = AppDataContext.Positions.OrderBy(p => p.Name).ToList();
             for (int i = 0; i < positions.Count; i++) { lookup.Cells[i + 2, 8].Value = positions[i].Name; lookup.Cells[i + 2, 9].Value = positions[i].Id; }
+
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachChucDanh", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachChucDanh");
+            if (positions.Any()) wb.Names.Add("DanhSachChucDanh", lookup.Cells[2, 8, 1 + positions.Count, 8]);
+
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachChucDanhRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachChucDanhRange");
+            if (positions.Any()) wb.Names.Add("DanhSachChucDanhRange", lookup.Cells[2, 8, 1 + positions.Count, 9]);
 
             // 3. Điền dữ liệu Danh mục Lương (Sắp xếp theo ParentId để dữ liệu liên tục)
             var salaryScales = AppDataContext.SalaryScales.OrderBy(s => s.Name).ToList();
@@ -202,6 +248,12 @@ public class HuWorkingController : ControllerBase
                 lookup.Cells[i + 2, 11].Value = salaryScales[i].Id;
                 lookup.Cells[i + 2, 12].Value = "SCALE_" + salaryScales[i].Code.Replace(" ", "_");
             }
+
+            if (wb.Names.Any(n => n.Name.Equals("ThangLuongList", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("ThangLuongList");
+            if (salaryScales.Any()) wb.Names.Add("ThangLuongList", lookup.Cells[2, 10, 1 + salaryScales.Count, 10]);
+
+            if (wb.Names.Any(n => n.Name.Equals("ThangLuongData", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("ThangLuongData");
+            if (salaryScales.Any()) wb.Names.Add("ThangLuongData", lookup.Cells[2, 10, 1 + salaryScales.Count, 12]);
 
             // QUAN TRỌNG: Sắp xếp theo ScaleId để các ngạch cùng thang nằm cạnh nhau
             var salaryGrades = AppDataContext.SalaryGrades.OrderBy(g => g.PaSalaryScaleId).ThenBy(g => g.Name).ToList();
@@ -213,6 +265,9 @@ public class HuWorkingController : ControllerBase
                 lookup.Cells[i + 2, 16].Value = "GRADE_" + salaryGrades[i].Code.Replace(" ", "_");
             }
 
+            if (wb.Names.Any(n => n.Name.Equals("NgachLuongData", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("NgachLuongData");
+            if (salaryGrades.Any()) wb.Names.Add("NgachLuongData", lookup.Cells[2, 13, 1 + salaryGrades.Count, 16]);
+
             // QUAN TRỌNG: Sắp xếp theo GradeId để các bậc cùng ngạch nằm cạnh nhau
             var salaryLevels = AppDataContext.SalaryLevels.OrderBy(l => l.PaSalaryGradeId).ThenBy(l => l.Name).ToList();
             for (int i = 0; i < salaryLevels.Count; i++)
@@ -221,6 +276,9 @@ public class HuWorkingController : ControllerBase
                 lookup.Cells[i + 2, 19].Value = salaryLevels[i].Id;
                 lookup.Cells[i + 2, 20].Value = salaryLevels[i].PaSalaryGradeId;
             }
+
+            if (wb.Names.Any(n => n.Name.Equals("BacLuongData", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("BacLuongData");
+            if (salaryLevels.Any()) wb.Names.Add("BacLuongData", lookup.Cells[2, 18, 1 + salaryLevels.Count, 19]);
 
             // Tạo Named Range động cho Ngạch lương và Bậc lương dựa trên dữ liệu vừa nạp
             foreach (var scale in salaryScales)
