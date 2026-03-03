@@ -341,6 +341,8 @@ public class HuWorkingController : ControllerBase
                     var expireDate = ParseDate(ws.Cells[row, 7].Value);
                     // Cột H: Căn cứ QĐ số
                     var decisionBaseNo = ws.Cells[row, 8].Value?.ToString()?.Trim();
+                    // Cột O: Ngày ký
+                    var signedDate = ParseDate(ws.Cells[row, 15].Value);
 
                     // Cột I: Phòng ban
                     var departmentName = ws.Cells[row, 9].Value?.ToString()?.Trim();
@@ -396,6 +398,7 @@ public class HuWorkingController : ControllerBase
                             EffectiveDate = effectiveDate,
                             ExpireDate = expireDate,
                             DecisionBaseNo = decisionBaseNo,
+                            SignedDate = signedDate,
                             DepartmentName = departmentName,
                             DepartmentId = departmentId,
                             PositionName = positionName,
@@ -420,12 +423,7 @@ public class HuWorkingController : ControllerBase
         }
     }
 
-    [HttpPost("test-import-file-with-data")]
-    public IActionResult ImportFileWithData()
-    {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        return Ok(new { message = "Release Template đã sẵn sàng" });
-    }
+
 }
 
 //--Thang lương
