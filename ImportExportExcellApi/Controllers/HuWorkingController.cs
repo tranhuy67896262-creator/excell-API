@@ -92,6 +92,10 @@ public class HuWorkingController : ControllerBase
             if (wb.Names.Any(n => n.Name.Equals("NgachLuongData", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("NgachLuongData");
             wb.Names.Add("NgachLuongData", lookup.Cells["M2:P1000"]);
 
+            // --- Bậc lương (Cột R, S, T) ---
+            if (wb.Names.Any(n => n.Name.Equals("BacLuongData", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("BacLuongData");
+            wb.Names.Add("BacLuongData", lookup.Cells["R2:S1000"]); // Name -> Id
+
             // 2. Thiết lập Data Validation & Formulas
             var dvEmp = ws.Cells[6, 2, 1000, 2].DataValidation.AddListDataValidation();
             dvEmp.Formula.ExcelFormula = "=DanhSachCode";
@@ -129,12 +133,20 @@ public class HuWorkingController : ControllerBase
                 // Tên người ký (Cột Q) và ID người ký (Cột AF - 32)
                 ws.Cells[r, 17].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachNhanVien, 2, FALSE))";
                 ws.Cells[r, 32].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachCodeId, 3, FALSE))";
+
+                // Tra cứu ID Thang/Ngạch/Bậc lương (Cột 29, 30, 31)
+                ws.Cells[r, 29].Formula = $"=IF(L{r}=\"\", \"\", VLOOKUP(L{r}, ThangLuongData, 2, FALSE))";
+                ws.Cells[r, 30].Formula = $"=IF(M{r}=\"\", \"\", VLOOKUP(M{r}, NgachLuongData, 2, FALSE))";
+                ws.Cells[r, 31].Formula = $"=IF(N{r}=\"\", \"\", VLOOKUP(N{r}, BacLuongData, 2, FALSE))";
             }
 
             ws.Column(1).Hidden = true;
             ws.Column(26).Hidden = true;
             ws.Column(27).Hidden = true;
             ws.Column(28).Hidden = true;
+            ws.Column(29).Hidden = true;
+            ws.Column(30).Hidden = true;
+            ws.Column(31).Hidden = true;
             ws.Column(32).Hidden = true;
 
             package.SaveAs(new FileInfo(releasePath));
