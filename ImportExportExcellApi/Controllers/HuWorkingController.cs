@@ -264,34 +264,35 @@ public class HuWorkingController : ControllerBase
                 ws.Cells[r, 1].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachCodeId, 3, FALSE))";
                 // Cột C (3): Tên nhân viên từ dropdown Mã NV (cột B)
                 ws.Cells[r, 3].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachNhanVien, 2, FALSE))";
-                
-                // Cột 18 (R): ID Loại QĐ ẩn từ dropdown (cột D)
-                ws.Cells[r, 18].Formula = $"=IF(D{r}=\"\", \"\", VLOOKUP(D{r}, DanhSachLoaiQuyetDinhRange, 2, FALSE))";
-                // Cột 19 (S): ID Phòng ban ẩn từ dropdown (cột I)
-                ws.Cells[r, 19].Formula = $"=IF(I{r}=\"\", \"\", VLOOKUP(I{r}, DanhSachPhongBanRange, 2, FALSE))";
-                // Cột 20 (T): ID Chức danh ẩn từ dropdown (cột J)
-                ws.Cells[r, 20].Formula = $"=IF(J{r}=\"\", \"\", VLOOKUP(J{r}, DanhSachChucDanhRange, 2, FALSE))";
-                // Cột 21 (U): ID Thang lương ẩn từ dropdown (cột L)
-                ws.Cells[r, 21].Formula = $"=IF(L{r}=\"\", \"\", VLOOKUP(L{r}, ThangLuongRange, 2, FALSE))";
-                // Cột 22 (V): ID Ngạch lương ẩn từ dropdown (cột M)
-                ws.Cells[r, 22].Formula = $"=IF(M{r}=\"\", \"\", VLOOKUP(M{r}, NgachLuongAll, 2, FALSE))";
-                // Cột 23 (W): ID Bậc lương ẩn từ dropdown (cột N)
-                ws.Cells[r, 23].Formula = $"=IF(N{r}=\"\", \"\", VLOOKUP(N{r}, BacLuongAll, 2, FALSE))";
-                
+
+                // Các cột ẩn chứa ID bắt đầu từ cột Z (26) để không ảnh hưởng cột hiển thị
+                // Cột 26 (Z): ID Loại QĐ ẩn từ dropdown (cột D)
+                ws.Cells[r, 26].Formula = $"=IF(D{r}=\"\", \"\", VLOOKUP(D{r}, DanhSachLoaiQuyetDinhRange, 2, FALSE))";
+                // Cột 27 (AA): ID Phòng ban ẩn từ dropdown (cột I)
+                ws.Cells[r, 27].Formula = $"=IF(I{r}=\"\", \"\", VLOOKUP(I{r}, DanhSachPhongBanRange, 2, FALSE))";
+                // Cột 28 (AB): ID Chức danh ẩn từ dropdown (cột J)
+                ws.Cells[r, 28].Formula = $"=IF(J{r}=\"\", \"\", VLOOKUP(J{r}, DanhSachChucDanhRange, 2, FALSE))";
+                // Cột 29 (AC): ID Thang lương ẩn từ dropdown (cột L)
+                ws.Cells[r, 29].Formula = $"=IF(L{r}=\"\", \"\", VLOOKUP(L{r}, ThangLuongRange, 2, FALSE))";
+                // Cột 30 (AD): ID Ngạch lương ẩn từ dropdown (cột M)
+                ws.Cells[r, 30].Formula = $"=IF(M{r}=\"\", \"\", VLOOKUP(M{r}, NgachLuongAll, 2, FALSE))";
+                // Cột 31 (AE): ID Bậc lương ẩn từ dropdown (cột N)
+                ws.Cells[r, 31].Formula = $"=IF(N{r}=\"\", \"\", VLOOKUP(N{r}, BacLuongAll, 2, FALSE))";
+                // Cột 32 (AF): ID Người ký ẩn từ dropdown (cột P)
+                ws.Cells[r, 32].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachCodeId, 3, FALSE))";
+
                 // Cột Q (17): Tên người ký từ dropdown Mã người ký (cột P)
                 ws.Cells[r, 17].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachNhanVien, 2, FALSE))";
-                // Cột 24 (X): ID Người ký ẩn từ dropdown (cột P)
-                ws.Cells[r, 24].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachCodeId, 3, FALSE))";
             }
             // Ẩn các cột ID
-            ws.Column(1).Hidden = true;   // ID Nhân viên
-            ws.Column(18).Hidden = true;  // ID Loại QĐ
-            ws.Column(19).Hidden = true;  // ID Phòng ban
-            ws.Column(20).Hidden = true;  // ID Chức danh
-            ws.Column(21).Hidden = true;  // ID Thang lương
-            ws.Column(22).Hidden = true;  // ID Ngạch lương
-            ws.Column(23).Hidden = true;  // ID Bậc lương
-            ws.Column(24).Hidden = true;  // ID Người ký
+            ws.Column(1).Hidden = true;   // A: ID Nhân viên
+            ws.Column(26).Hidden = true;  // Z: ID Loại QĐ
+            ws.Column(27).Hidden = true;  // AA: ID Phòng ban
+            ws.Column(28).Hidden = true;  // AB: ID Chức danh
+            ws.Column(29).Hidden = true;  // AC: ID Thang lương
+            ws.Column(30).Hidden = true;  // AD: ID Ngạch lương
+            ws.Column(31).Hidden = true;  // AE: ID Bậc lương
+            ws.Column(32).Hidden = true;  // AF: ID Người ký
 
             // Dropdown Mã người ký ở cột P
             var dvSigner = ws.Cells[6, 16, 100, 16].DataValidation.AddListDataValidation();
@@ -363,7 +364,7 @@ public class HuWorkingController : ControllerBase
                     // Cột D: Loại quyết định
                     var decisionName = ws.Cells[row, 4].Value?.ToString()?.Trim();
                     long? decisionId = null;
-                    var decisionIdCell = ws.Cells[row, 18].Value;  // Cột R (ẩn)
+                    var decisionIdCell = ws.Cells[row, 26].Value;  // Cột Z (ẩn)
                     if (decisionIdCell != null && long.TryParse(decisionIdCell.ToString(), out var dId))
                     {
                         decisionId = dId;
@@ -379,37 +380,39 @@ public class HuWorkingController : ControllerBase
                     var decisionBaseNo = ws.Cells[row, 8].Value?.ToString()?.Trim();
                     // Cột O: Ngày ký
                     var signedDate = ParseDate(ws.Cells[row, 15].Value);
+                    // Cột R: Ghi chú
+                    var note = ws.Cells[row, 18].Value?.ToString()?.Trim();
 
                     // Cột I: Phòng ban
                     var departmentName = ws.Cells[row, 9].Value?.ToString()?.Trim();
                     long? departmentId = null;
-                    var departmentIdCell = ws.Cells[row, 19].Value;  // Cột S (ẩn)
+                    var departmentIdCell = ws.Cells[row, 27].Value;  // Cột AA (ẩn)
                     if (departmentIdCell != null && long.TryParse(departmentIdCell.ToString(), out var depId)) departmentId = depId;
 
                     // Cột J: Chức danh
                     var positionName = ws.Cells[row, 10].Value?.ToString()?.Trim();
                     long? positionId = null;
-                    var positionIdCell = ws.Cells[row, 20].Value;  // Cột T (ẩn)
+                    var positionIdCell = ws.Cells[row, 28].Value;  // Cột AB (ẩn)
                     if (positionIdCell != null && long.TryParse(positionIdCell.ToString(), out var posId)) positionId = posId;
 
-                    // Cột L: Thang lương - ID từ cột ẩn 21 (U)
-                    var scaleIdCell = ws.Cells[row, 21].Value;
+                    // Cột L: Thang lương - ID từ cột ẩn 29 (AC)
+                    var scaleIdCell = ws.Cells[row, 29].Value;
                     long? scaleId = null;
                     if (scaleIdCell != null && long.TryParse(scaleIdCell.ToString(), out var scId))
                     {
                         scaleId = scId;
                     }
 
-                    // Cột M: Ngạch lương - ID từ cột ẩn 22 (V)
-                    var gradeIdCell = ws.Cells[row, 22].Value;
+                    // Cột M: Ngạch lương - ID từ cột ẩn 30 (AD)
+                    var gradeIdCell = ws.Cells[row, 30].Value;
                     long? gradeId = null;
                     if (gradeIdCell != null && long.TryParse(gradeIdCell.ToString(), out var grId))
                     {
                         gradeId = grId;
                     }
 
-                    // Cột N: Bậc lương - ID từ cột ẩn 23 (W)
-                    var levelIdCell = ws.Cells[row, 23].Value;
+                    // Cột N: Bậc lương - ID từ cột ẩn 31 (AE)
+                    var levelIdCell = ws.Cells[row, 31].Value;
                     long? levelId = null;
                     if (levelIdCell != null && long.TryParse(levelIdCell.ToString(), out var lvId))
                     {
@@ -419,7 +422,7 @@ public class HuWorkingController : ControllerBase
                     // Cột P: Mã người ký
                     var signerCode = ws.Cells[row, 16].Value?.ToString()?.Trim();
                     long? signerId = null;
-                    var signerIdCell = ws.Cells[row, 24].Value;  // Cột X (ẩn)
+                    var signerIdCell = ws.Cells[row, 32].Value;  // Cột AF (ẩn)
                     if (signerIdCell != null && long.TryParse(signerIdCell.ToString(), out var sigId))
                     {
                         signerId = sigId;
@@ -434,7 +437,7 @@ public class HuWorkingController : ControllerBase
                         {
                             Row = row,
                             Code = code,
-                            EmployeeId = info.EmpId,
+                            EmployeeId = employeeId ?? info.EmpId,  // Ưu tiên ID từ Excel, fallback từ DB
                             EmployeeCvId = info.CvId,
                             FullName = info.FullName,
                             DecisionTypeName = decisionName,
