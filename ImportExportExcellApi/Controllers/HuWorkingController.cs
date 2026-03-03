@@ -166,6 +166,9 @@ public class HuWorkingController : ControllerBase
                 if (scale == null) continue;
 
                 var grades = group.OrderBy(g => g.Name).ToList();
+                if (!grades.Any()) continue;
+
+                int startRow = 2 + gradeRow;
                 foreach (var grade in grades)
                 {
                     lookup.Cells[2 + gradeRow, gradeCol].Value = grade.Name;
@@ -173,12 +176,13 @@ public class HuWorkingController : ControllerBase
                     lookup.Cells[2 + gradeRow, gradeCol + 2].Value = grade.PaSalaryScaleId;
                     gradeRow++;
                 }
+                int endRow = startRow + grades.Count - 1;
 
                 // Tạo named range cho INDIRECT dropdown (Ngach_{TenThang})
                 var rangeName = "Ngach_" + scale.Name.Replace(" ", "_");
                 if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
                 // Named range chỉ chứa cột Name (cột đầu tiên) để dropdown hiển thị đúng
-                wb.Names.Add(rangeName, lookup.Cells[2 + gradeRow - grades.Count, gradeCol, 1 + gradeRow - 1, gradeCol]);
+                wb.Names.Add(rangeName, lookup.Cells[startRow, gradeCol, endRow, gradeCol]);
             }
 
             // Lưu trữ Bậc lương
@@ -190,6 +194,9 @@ public class HuWorkingController : ControllerBase
                 if (grade == null) continue;
 
                 var levels = group.OrderBy(l => l.Name).ToList();
+                if (!levels.Any()) continue;
+
+                int startRow = 2 + levelRow;
                 foreach (var level in levels)
                 {
                     lookup.Cells[2 + levelRow, levelCol].Value = level.Name;
@@ -197,18 +204,19 @@ public class HuWorkingController : ControllerBase
                     lookup.Cells[2 + levelRow, levelCol + 2].Value = level.PaSalaryGradeId;
                     levelRow++;
                 }
+                int endRow = startRow + levels.Count - 1;
 
                 // Tạo named range cho INDIRECT dropdown (Bac_{TenNgach})
                 var rangeName = "Bac_" + grade.Name.Replace(" ", "_");
                 if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
-                wb.Names.Add(rangeName, lookup.Cells[2 + levelRow - levels.Count, levelCol, 1 + levelRow - 1, levelCol]);
+                wb.Names.Add(rangeName, lookup.Cells[startRow, levelCol, endRow, levelCol]);
             }
 
             if (wb.Names.Any(n => n.Name.Equals("NgachLuongAll", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("NgachLuongAll");
-            wb.Names.Add("NgachLuongAll", lookup.Cells[2, gradeCol, 1 + gradeRow, gradeCol + 2]);
+            if (gradeRow > 0) wb.Names.Add("NgachLuongAll", lookup.Cells[2, gradeCol, 1 + gradeRow, gradeCol + 2]);
 
             if (wb.Names.Any(n => n.Name.Equals("BacLuongAll", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("BacLuongAll");
-            wb.Names.Add("BacLuongAll", lookup.Cells[2, levelCol, 1 + levelRow, levelCol + 2]);
+            if (levelRow > 0) wb.Names.Add("BacLuongAll", lookup.Cells[2, levelCol, 1 + levelRow, levelCol + 2]);
 
             var dv = ws.Cells[6, 2, 100, 2].DataValidation.AddListDataValidation();
             dv.Formula.ExcelFormula = "=DanhSachCode";
@@ -252,21 +260,45 @@ public class HuWorkingController : ControllerBase
 
             for (int r = 6; r <= 100; r++)
             {
-                ws.Cells[r, 3].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachNhanVien, 2, FALSE))";
+                // Cột A (1): ID nhân viên ẩn từ dropdown Mã NV (cột B)
                 ws.Cells[r, 1].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachCodeId, 3, FALSE))";
-                ws.Cells[r, 26].Formula = $"=IF(D{r}=\"\", \"\", VLOOKUP(D{r}, DanhSachLoaiQuyetDinhRange, 2, FALSE))";
-                ws.Cells[r, 27].Formula = $"=IF(I{r}=\"\", \"\", VLOOKUP(I{r}, DanhSachPhongBanRange, 2, FALSE))";
-                ws.Cells[r, 28].Formula = $"=IF(J{r}=\"\", \"\", VLOOKUP(J{r}, DanhSachChucDanhRange, 2, FALSE))";
-                ws.Cells[r, 29].Formula = $"=IF(L{r}=\"\", \"\", VLOOKUP(L{r}, ThangLuongRange, 2, FALSE))";
-                ws.Cells[r, 30].Formula = $"=IF(M{r}=\"\", \"\", VLOOKUP(M{r}, NgachLuongAll, 2, FALSE))";
-                ws.Cells[r, 31].Formula = $"=IF(N{r}=\"\", \"\", VLOOKUP(N{r}, BacLuongAll, 2, FALSE))";
+                // Cột C (3): Tên nhân viên từ dropdown Mã NV (cột B)
+                ws.Cells[r, 3].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachNhanVien, 2, FALSE))";
+                
+                // Cột 18 (R): ID Loại QĐ ẩn từ dropdown (cột D)
+                ws.Cells[r, 18].Formula = $"=IF(D{r}=\"\", \"\", VLOOKUP(D{r}, DanhSachLoaiQuyetDinhRange, 2, FALSE))";
+                // Cột 19 (S): ID Phòng ban ẩn từ dropdown (cột I)
+                ws.Cells[r, 19].Formula = $"=IF(I{r}=\"\", \"\", VLOOKUP(I{r}, DanhSachPhongBanRange, 2, FALSE))";
+                // Cột 20 (T): ID Chức danh ẩn từ dropdown (cột J)
+                ws.Cells[r, 20].Formula = $"=IF(J{r}=\"\", \"\", VLOOKUP(J{r}, DanhSachChucDanhRange, 2, FALSE))";
+                // Cột 21 (U): ID Thang lương ẩn từ dropdown (cột L)
+                ws.Cells[r, 21].Formula = $"=IF(L{r}=\"\", \"\", VLOOKUP(L{r}, ThangLuongRange, 2, FALSE))";
+                // Cột 22 (V): ID Ngạch lương ẩn từ dropdown (cột M)
+                ws.Cells[r, 22].Formula = $"=IF(M{r}=\"\", \"\", VLOOKUP(M{r}, NgachLuongAll, 2, FALSE))";
+                // Cột 23 (W): ID Bậc lương ẩn từ dropdown (cột N)
+                ws.Cells[r, 23].Formula = $"=IF(N{r}=\"\", \"\", VLOOKUP(N{r}, BacLuongAll, 2, FALSE))";
+                
+                // Cột Q (17): Tên người ký từ dropdown Mã người ký (cột P)
+                ws.Cells[r, 17].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachNhanVien, 2, FALSE))";
+                // Cột 24 (X): ID Người ký ẩn từ dropdown (cột P)
+                ws.Cells[r, 24].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachCodeId, 3, FALSE))";
             }
-            ws.Column(26).Hidden = true;
-            ws.Column(27).Hidden = true;
-            ws.Column(28).Hidden = true;
-            ws.Column(29).Hidden = true;
-            ws.Column(30).Hidden = true;
-            ws.Column(31).Hidden = true;
+            // Ẩn các cột ID
+            ws.Column(1).Hidden = true;   // ID Nhân viên
+            ws.Column(18).Hidden = true;  // ID Loại QĐ
+            ws.Column(19).Hidden = true;  // ID Phòng ban
+            ws.Column(20).Hidden = true;  // ID Chức danh
+            ws.Column(21).Hidden = true;  // ID Thang lương
+            ws.Column(22).Hidden = true;  // ID Ngạch lương
+            ws.Column(23).Hidden = true;  // ID Bậc lương
+            ws.Column(24).Hidden = true;  // ID Người ký
+
+            // Dropdown Mã người ký ở cột P
+            var dvSigner = ws.Cells[6, 16, 100, 16].DataValidation.AddListDataValidation();
+            dvSigner.Formula.ExcelFormula = "=DanhSachCode";
+            dvSigner.AllowBlank = true;
+            dvSigner.ErrorTitle = "Giá trị không hợp lệ";
+            dvSigner.Error = "Vui lòng chọn giá trị có trong danh sách.";
 
             var toRemove = ws.DataValidations
                 .Where(v => v.Address.Start.Column >= 5 && v.Address.End.Column <= 8)
@@ -316,21 +348,25 @@ public class HuWorkingController : ControllerBase
             {
                 for (int row = 6; row <= ws.Dimension.End.Row; row++)
                 {
-                    // Cột B trong file excel là cột Mã nhân viên
+                    // Cột B: Mã nhân viên
                     var code = ws.Cells[row, 2].Value?.ToString()?.Trim();
                     if (string.IsNullOrEmpty(code)) continue;
+
+                    // Cột A: ID nhân viên (ẩn)
+                    var employeeIdCell = ws.Cells[row, 1].Value;
+                    long? employeeId = null;
+                    if (employeeIdCell != null && long.TryParse(employeeIdCell.ToString(), out var empId))
+                    {
+                        employeeId = empId;
+                    }
 
                     // Cột D: Loại quyết định
                     var decisionName = ws.Cells[row, 4].Value?.ToString()?.Trim();
                     long? decisionId = null;
-                    var decisionIdCell = ws.Cells[row, 26].Value;
+                    var decisionIdCell = ws.Cells[row, 18].Value;  // Cột R (ẩn)
                     if (decisionIdCell != null && long.TryParse(decisionIdCell.ToString(), out var dId))
                     {
                         decisionId = dId;
-                    }
-                    else if (!string.IsNullOrEmpty(decisionName))
-                    {
-                        errors.Add($"Dòng {row}: Loại quyết định '{decisionName}' không hợp lệ");
                     }
 
                     // Cột E: Số quyết định
@@ -347,37 +383,46 @@ public class HuWorkingController : ControllerBase
                     // Cột I: Phòng ban
                     var departmentName = ws.Cells[row, 9].Value?.ToString()?.Trim();
                     long? departmentId = null;
-                    var departmentIdCell = ws.Cells[row, 27].Value;
+                    var departmentIdCell = ws.Cells[row, 19].Value;  // Cột S (ẩn)
                     if (departmentIdCell != null && long.TryParse(departmentIdCell.ToString(), out var depId)) departmentId = depId;
 
                     // Cột J: Chức danh
                     var positionName = ws.Cells[row, 10].Value?.ToString()?.Trim();
                     long? positionId = null;
-                    var positionIdCell = ws.Cells[row, 28].Value;
+                    var positionIdCell = ws.Cells[row, 20].Value;  // Cột T (ẩn)
                     if (positionIdCell != null && long.TryParse(positionIdCell.ToString(), out var posId)) positionId = posId;
 
-                    // Cột L: Thang lương - ID từ cột ẩn 29 (VLOOKUP trong Excel)
-                    var scaleIdCell = ws.Cells[row, 29].Value;
+                    // Cột L: Thang lương - ID từ cột ẩn 21 (U)
+                    var scaleIdCell = ws.Cells[row, 21].Value;
                     long? scaleId = null;
                     if (scaleIdCell != null && long.TryParse(scaleIdCell.ToString(), out var scId))
                     {
                         scaleId = scId;
                     }
 
-                    // Cột M: Ngạch lương - ID từ cột ẩn 30 (VLOOKUP trong Excel)
-                    var gradeIdCell = ws.Cells[row, 30].Value;
+                    // Cột M: Ngạch lương - ID từ cột ẩn 22 (V)
+                    var gradeIdCell = ws.Cells[row, 22].Value;
                     long? gradeId = null;
                     if (gradeIdCell != null && long.TryParse(gradeIdCell.ToString(), out var grId))
                     {
                         gradeId = grId;
                     }
 
-                    // Cột N: Bậc lương - ID từ cột ẩn 31 (VLOOKUP trong Excel)
-                    var levelIdCell = ws.Cells[row, 31].Value;
+                    // Cột N: Bậc lương - ID từ cột ẩn 23 (W)
+                    var levelIdCell = ws.Cells[row, 23].Value;
                     long? levelId = null;
                     if (levelIdCell != null && long.TryParse(levelIdCell.ToString(), out var lvId))
                     {
                         levelId = lvId;
+                    }
+
+                    // Cột P: Mã người ký
+                    var signerCode = ws.Cells[row, 16].Value?.ToString()?.Trim();
+                    long? signerId = null;
+                    var signerIdCell = ws.Cells[row, 24].Value;  // Cột X (ẩn)
+                    if (signerIdCell != null && long.TryParse(signerIdCell.ToString(), out var sigId))
+                    {
+                        signerId = sigId;
                     }
 
                     if (string.IsNullOrEmpty(decisionNo)) errors.Add($"Dòng {row}: Thiếu số quyết định");
@@ -399,6 +444,8 @@ public class HuWorkingController : ControllerBase
                             ExpireDate = expireDate,
                             DecisionBaseNo = decisionBaseNo,
                             SignedDate = signedDate,
+                            SignerCode = signerCode,
+                            SignerId = signerId,
                             DepartmentName = departmentName,
                             DepartmentId = departmentId,
                             PositionName = positionName,
