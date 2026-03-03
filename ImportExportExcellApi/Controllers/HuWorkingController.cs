@@ -437,7 +437,7 @@ public class HuWorkingController : ControllerBase
                         {
                             Row = row,
                             Code = code,
-                            EmployeeId = employeeId ?? info.EmpId,  // Ưu tiên ID từ Excel, fallback từ DB
+                            EmployeeId = employeeId ?? info.EmpId,
                             EmployeeCvId = info.CvId,
                             FullName = info.FullName,
                             DecisionTypeName = decisionName,
@@ -447,6 +447,7 @@ public class HuWorkingController : ControllerBase
                             ExpireDate = expireDate,
                             DecisionBaseNo = decisionBaseNo,
                             SignedDate = signedDate,
+                            Note = note,
                             SignerCode = signerCode,
                             SignerId = signerId,
                             DepartmentName = departmentName,
