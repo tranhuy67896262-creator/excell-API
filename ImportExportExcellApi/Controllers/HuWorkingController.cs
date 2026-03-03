@@ -162,6 +162,9 @@ public class HuWorkingController : ControllerBase
             int gradeRow = 0;
             foreach (var group in scaleGrades)
             {
+                var scale = salaryScales.FirstOrDefault(s => s.Id == group.Key);
+                if (scale == null) continue;
+
                 var grades = group.OrderBy(g => g.Name).ToList();
                 foreach (var grade in grades)
                 {
@@ -170,6 +173,12 @@ public class HuWorkingController : ControllerBase
                     lookup.Cells[2 + gradeRow, gradeCol + 2].Value = grade.PaSalaryScaleId;
                     gradeRow++;
                 }
+
+                // Tạo named range cho INDIRECT dropdown (Ngach_{TenThang})
+                var rangeName = "Ngach_" + scale.Name.Replace(" ", "_");
+                if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
+                // Named range chỉ chứa cột Name (cột đầu tiên) để dropdown hiển thị đúng
+                wb.Names.Add(rangeName, lookup.Cells[2 + gradeRow - grades.Count, gradeCol, 1 + gradeRow - 1, gradeCol]);
             }
 
             // Lưu trữ Bậc lương
@@ -177,6 +186,9 @@ public class HuWorkingController : ControllerBase
             int levelRow = 0;
             foreach (var group in gradeLevels)
             {
+                var grade = salaryGrades.FirstOrDefault(g => g.Id == group.Key);
+                if (grade == null) continue;
+
                 var levels = group.OrderBy(l => l.Name).ToList();
                 foreach (var level in levels)
                 {
@@ -185,6 +197,11 @@ public class HuWorkingController : ControllerBase
                     lookup.Cells[2 + levelRow, levelCol + 2].Value = level.PaSalaryGradeId;
                     levelRow++;
                 }
+
+                // Tạo named range cho INDIRECT dropdown (Bac_{TenNgach})
+                var rangeName = "Bac_" + grade.Name.Replace(" ", "_");
+                if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
+                wb.Names.Add(rangeName, lookup.Cells[2 + levelRow - levels.Count, levelCol, 1 + levelRow - 1, levelCol]);
             }
 
             if (wb.Names.Any(n => n.Name.Equals("NgachLuongAll", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("NgachLuongAll");
@@ -274,6 +291,8 @@ public class HuWorkingController : ControllerBase
         using (var package = new ExcelPackage(file.OpenReadStream()))
         {
             var ws = package.Workbook.Worksheets[0];
+
+            // Load data từ DB để lookup
             var map = AppDataContext.Employees
                 .Join(AppDataContext.EmployeeCvs, e => e.EmployeeId, c => c.Id,
                     (e, c) => new { e.Code, EmpId = e.Id, CvId = e.EmployeeId, c.FullName })
@@ -335,43 +354,28 @@ public class HuWorkingController : ControllerBase
                     var positionIdCell = ws.Cells[row, 28].Value;
                     if (positionIdCell != null && long.TryParse(positionIdCell.ToString(), out var posId)) positionId = posId;
 
-                    // Cột L: Thang lương
-                    var scaleName = ws.Cells[row, 12].Value?.ToString()?.Trim();
-                    long? scaleId = null;
+                    // Cột L: Thang lương - ID từ cột ẩn 29 (VLOOKUP trong Excel)
                     var scaleIdCell = ws.Cells[row, 29].Value;
+                    long? scaleId = null;
                     if (scaleIdCell != null && long.TryParse(scaleIdCell.ToString(), out var scId))
                     {
                         scaleId = scId;
                     }
-                    else if (!string.IsNullOrEmpty(scaleName))
-                    {
-                        errors.Add($"Dòng {row}: Thang lương '{scaleName}' không hợp lệ");
-                    }
 
-                    // Cột M: Ngạch lương
-                    var gradeName = ws.Cells[row, 13].Value?.ToString()?.Trim();
-                    long? gradeId = null;
+                    // Cột M: Ngạch lương - ID từ cột ẩn 30 (VLOOKUP trong Excel)
                     var gradeIdCell = ws.Cells[row, 30].Value;
+                    long? gradeId = null;
                     if (gradeIdCell != null && long.TryParse(gradeIdCell.ToString(), out var grId))
                     {
                         gradeId = grId;
                     }
-                    else if (!string.IsNullOrEmpty(gradeName))
-                    {
-                        errors.Add($"Dòng {row}: Ngạch lương '{gradeName}' không hợp lệ");
-                    }
 
-                    // Cột N: Bậc lương
-                    var levelName = ws.Cells[row, 14].Value?.ToString()?.Trim();
-                    long? levelId = null;
+                    // Cột N: Bậc lương - ID từ cột ẩn 31 (VLOOKUP trong Excel)
                     var levelIdCell = ws.Cells[row, 31].Value;
+                    long? levelId = null;
                     if (levelIdCell != null && long.TryParse(levelIdCell.ToString(), out var lvId))
                     {
                         levelId = lvId;
-                    }
-                    else if (!string.IsNullOrEmpty(levelName))
-                    {
-                        errors.Add($"Dòng {row}: Bậc lương '{levelName}' không hợp lệ");
                     }
 
                     if (string.IsNullOrEmpty(decisionNo)) errors.Add($"Dòng {row}: Thiếu số quyết định");
@@ -396,11 +400,8 @@ public class HuWorkingController : ControllerBase
                             DepartmentId = departmentId,
                             PositionName = positionName,
                             PositionId = positionId,
-                            SalaryScaleName = scaleName,
                             SalaryScaleId = scaleId,
-                            SalaryGradeName = gradeName,
                             SalaryGradeId = gradeId,
-                            SalaryLevelName = levelName,
                             SalaryLevelId = levelId
                         });
                     }
