@@ -199,9 +199,11 @@ public class HuWorkingController : ControllerBase
             {
                 for (int row = 6; row <= ws.Dimension.End.Row; row++)
                 {
+                    // Cột B trong file excel là cột Mã nhân viên
                     var code = ws.Cells[row, 2].Value?.ToString()?.Trim();
                     if (string.IsNullOrEmpty(code)) continue;
 
+                    // Cột D: Loại quyết định
                     var decisionName = ws.Cells[row, 4].Value?.ToString()?.Trim();
                     long? decisionId = null;
                     var decisionIdCell = ws.Cells[row, 26].Value;
@@ -214,16 +216,22 @@ public class HuWorkingController : ControllerBase
                         errors.Add($"Dòng {row}: Loại quyết định '{decisionName}' không hợp lệ");
                     }
 
+                    // Cột E: Số quyết định
                     var decisionNo = ws.Cells[row, 5].Value?.ToString()?.Trim();
+                    // Cột F: Ngày hiệu lực
                     var effectiveDate = ParseDate(ws.Cells[row, 6].Value);
+                    // Cột G: Ngày hết hiệu lực
                     var expireDate = ParseDate(ws.Cells[row, 7].Value);
+                    // Cột H: Căn cứ QĐ số
                     var decisionBaseNo = ws.Cells[row, 8].Value?.ToString()?.Trim();
 
+                    // Cột I: Phòng ban
                     var departmentName = ws.Cells[row, 9].Value?.ToString()?.Trim();
                     long? departmentId = null;
                     var departmentIdCell = ws.Cells[row, 27].Value;
                     if (departmentIdCell != null && long.TryParse(departmentIdCell.ToString(), out var depId)) departmentId = depId;
 
+                    // Cột J: Chức danh
                     var positionName = ws.Cells[row, 10].Value?.ToString()?.Trim();
                     long? positionId = null;
                     var positionIdCell = ws.Cells[row, 28].Value;
