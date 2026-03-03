@@ -147,6 +147,9 @@ public class HuWorkingController : ControllerBase
             var lookup = package.Workbook.Worksheets["Data_Lookup"];
             var wb = package.Workbook;
 
+            // Xóa dữ liệu cũ trong lookup để tránh bị rác
+            lookup.Cells.Clear();
+
             // 1. Điền dữ liệu Nhân viên
             var emps = AppDataContext.Employees
                 .Join(AppDataContext.EmployeeCvs, e => e.EmployeeId, c => c.Id,
@@ -170,7 +173,7 @@ public class HuWorkingController : ControllerBase
             var positions = AppDataContext.Positions.OrderBy(p => p.Name).ToList();
             for (int i = 0; i < positions.Count; i++) { lookup.Cells[i + 2, 8].Value = positions[i].Name; lookup.Cells[i + 2, 9].Value = positions[i].Id; }
 
-            // 3. Điền dữ liệu Danh mục Lương và Tạo Named Range Động
+            // 3. Điền dữ liệu Danh mục Lương (Sắp xếp theo ParentId để dữ liệu liên tục)
             var salaryScales = AppDataContext.SalaryScales.OrderBy(s => s.Name).ToList();
             for (int i = 0; i < salaryScales.Count; i++)
             {
@@ -179,7 +182,8 @@ public class HuWorkingController : ControllerBase
                 lookup.Cells[i + 2, 12].Value = "SCALE_" + salaryScales[i].Code.Replace(" ", "_");
             }
 
-            var salaryGrades = AppDataContext.SalaryGrades.OrderBy(g => g.Name).ToList();
+            // QUAN TRỌNG: Sắp xếp theo ScaleId để các ngạch cùng thang nằm cạnh nhau
+            var salaryGrades = AppDataContext.SalaryGrades.OrderBy(g => g.PaSalaryScaleId).ThenBy(g => g.Name).ToList();
             for (int i = 0; i < salaryGrades.Count; i++)
             {
                 lookup.Cells[i + 2, 13].Value = salaryGrades[i].Name;
@@ -188,7 +192,8 @@ public class HuWorkingController : ControllerBase
                 lookup.Cells[i + 2, 16].Value = "GRADE_" + salaryGrades[i].Code.Replace(" ", "_");
             }
 
-            var salaryLevels = AppDataContext.SalaryLevels.OrderBy(l => l.Name).ToList();
+            // QUAN TRỌNG: Sắp xếp theo GradeId để các bậc cùng ngạch nằm cạnh nhau
+            var salaryLevels = AppDataContext.SalaryLevels.OrderBy(l => l.PaSalaryGradeId).ThenBy(l => l.Name).ToList();
             for (int i = 0; i < salaryLevels.Count; i++)
             {
                 lookup.Cells[i + 2, 18].Value = salaryLevels[i].Name;
@@ -202,7 +207,7 @@ public class HuWorkingController : ControllerBase
                 var gradesOfScale = salaryGrades.Where(g => g.PaSalaryScaleId == scale.Id).ToList();
                 if (gradesOfScale.Any())
                 {
-                    var rangeName = "Ngach_" + scale.Name.Replace(" ", "_");
+                    var rangeName = "SCALE_" + scale.Code.Replace(" ", "_");
                     if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
                     
                     var firstGrade = gradesOfScale.First();
@@ -216,7 +221,7 @@ public class HuWorkingController : ControllerBase
                 var levelsOfGrade = salaryLevels.Where(l => l.PaSalaryGradeId == grade.Id).ToList();
                 if (levelsOfGrade.Any())
                 {
-                    var rangeName = "Bac_" + grade.Name.Replace(" ", "_");
+                    var rangeName = "GRADE_" + grade.Code.Replace(" ", "_");
                     if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
 
                     var firstLevel = levelsOfGrade.First();
