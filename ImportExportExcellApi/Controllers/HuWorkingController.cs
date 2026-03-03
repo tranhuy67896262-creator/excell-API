@@ -108,6 +108,10 @@ public class HuWorkingController : ControllerBase
             var dvScale = ws.Cells[6, 12, 1000, 12].DataValidation.AddListDataValidation();
             dvScale.Formula.ExcelFormula = "=ThangLuongList";
 
+            // Dropdown Mã người ký (Cột P)
+            var dvSigner = ws.Cells[6, 16, 1000, 16].DataValidation.AddListDataValidation();
+            dvSigner.Formula.ExcelFormula = "=DanhSachCode";
+
             for (int r = 6; r <= 1000; r++)
             {
                 var dvGrade = ws.Cells[r, 13, r, 13].DataValidation.AddListDataValidation();
@@ -121,12 +125,17 @@ public class HuWorkingController : ControllerBase
                 ws.Cells[r, 26].Formula = $"=IF(D{r}=\"\", \"\", VLOOKUP(D{r}, DanhSachLoaiQuyetDinhRange, 2, FALSE))";
                 ws.Cells[r, 27].Formula = $"=IF(I{r}=\"\", \"\", VLOOKUP(I{r}, DanhSachPhongBanRange, 2, FALSE))";
                 ws.Cells[r, 28].Formula = $"=IF(J{r}=\"\", \"\", VLOOKUP(J{r}, DanhSachChucDanhRange, 2, FALSE))";
+
+                // Tên người ký (Cột Q) và ID người ký (Cột AF - 32)
+                ws.Cells[r, 17].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachNhanVien, 2, FALSE))";
+                ws.Cells[r, 32].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachCodeId, 3, FALSE))";
             }
 
             ws.Column(1).Hidden = true;
             ws.Column(26).Hidden = true;
             ws.Column(27).Hidden = true;
             ws.Column(28).Hidden = true;
+            ws.Column(32).Hidden = true;
 
             package.SaveAs(new FileInfo(releasePath));
         }
