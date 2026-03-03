@@ -34,14 +34,14 @@ public class HuWorkingController : ControllerBase
         }
     }
 
-    //  Đã xóa các property Code, FullName, Id thừa ở đây
-    [HttpGet("export")]
-    public IActionResult Export()
+    [HttpGet("generate-template")]
+    public IActionResult GenerateTemplate()
     {
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-        var path = Path.Combine(_environment.ContentRootPath, _templateFolderName, _baseTemplateName);
+        var basePath = Path.Combine(_environment.ContentRootPath, _templateFolderName, _baseTemplateName);
+        var releasePath = Path.Combine(_environment.ContentRootPath, _templateFolderName, _releaseTemplateName);
 
-        using (var package = new ExcelPackage(new FileInfo(path)))
+        using (var package = new ExcelPackage(new FileInfo(basePath)))
         {
             var ws = package.Workbook.Worksheets[0];
             var lookup = package.Workbook.Worksheets.FirstOrDefault(w => w.Name == "Data_Lookup") ??
@@ -50,12 +50,109 @@ public class HuWorkingController : ControllerBase
             lookup.Hidden = eWorkSheetHidden.VeryHidden;
             lookup.Cells.Clear();
 
+            var wb = package.Workbook;
+
+            // 1. Thiết lập Named Ranges "Tĩnh" trỏ vào các vùng dữ liệu trong Data_Lookup
+            
+            // --- Nhân viên (Cột A, B, C) ---
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachCode", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachCode");
+            wb.Names.Add("DanhSachCode", lookup.Cells["A2:A2000"]);
+            
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachNhanVien", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachNhanVien");
+            wb.Names.Add("DanhSachNhanVien", lookup.Cells["A2:B2000"]);
+
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachCodeId", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachCodeId");
+            wb.Names.Add("DanhSachCodeId", lookup.Cells["A2:C2000"]);
+
+            // --- Loại quyết định (Cột D, E) ---
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinh", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachLoaiQuyetDinh");
+            wb.Names.Add("DanhSachLoaiQuyetDinh", lookup.Cells["D2:D1000"]);
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinhRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachLoaiQuyetDinhRange");
+            wb.Names.Add("DanhSachLoaiQuyetDinhRange", lookup.Cells["D2:E1000"]);
+
+            // --- Phòng ban (Cột F, G) ---
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachPhongBan", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachPhongBan");
+            wb.Names.Add("DanhSachPhongBan", lookup.Cells["F2:F1000"]);
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachPhongBanRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachPhongBanRange");
+            wb.Names.Add("DanhSachPhongBanRange", lookup.Cells["F2:G1000"]);
+
+            // --- Chức danh (Cột H, I) ---
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachChucDanh", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachChucDanh");
+            wb.Names.Add("DanhSachChucDanh", lookup.Cells["H2:H1000"]);
+            if (wb.Names.Any(n => n.Name.Equals("DanhSachChucDanhRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachChucDanhRange");
+            wb.Names.Add("DanhSachChucDanhRange", lookup.Cells["H2:I1000"]);
+
+            // --- Thang lương (Cột J, K, L) ---
+            if (wb.Names.Any(n => n.Name.Equals("ThangLuongList", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("ThangLuongList");
+            wb.Names.Add("ThangLuongList", lookup.Cells["J2:J1000"]);
+            if (wb.Names.Any(n => n.Name.Equals("ThangLuongData", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("ThangLuongData");
+            wb.Names.Add("ThangLuongData", lookup.Cells["J2:L1000"]); 
+
+            // --- Ngạch lương (Cột M, N, O, P) ---
+            if (wb.Names.Any(n => n.Name.Equals("NgachLuongData", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("NgachLuongData");
+            wb.Names.Add("NgachLuongData", lookup.Cells["M2:P1000"]);
+
+            // 2. Thiết lập Data Validation & Formulas
+            var dvEmp = ws.Cells[6, 2, 1000, 2].DataValidation.AddListDataValidation();
+            dvEmp.Formula.ExcelFormula = "=DanhSachCode";
+
+            var dvDecision = ws.Cells[6, 4, 1000, 4].DataValidation.AddListDataValidation();
+            dvDecision.Formula.ExcelFormula = "=DanhSachLoaiQuyetDinh";
+
+            var dvDept = ws.Cells[6, 9, 1000, 9].DataValidation.AddListDataValidation();
+            dvDept.Formula.ExcelFormula = "=DanhSachPhongBan";
+
+            var dvPos = ws.Cells[6, 10, 1000, 10].DataValidation.AddListDataValidation();
+            dvPos.Formula.ExcelFormula = "=DanhSachChucDanh";
+
+            var dvScale = ws.Cells[6, 12, 1000, 12].DataValidation.AddListDataValidation();
+            dvScale.Formula.ExcelFormula = "=ThangLuongList";
+
+            for (int r = 6; r <= 1000; r++)
+            {
+                var dvGrade = ws.Cells[r, 13, r, 13].DataValidation.AddListDataValidation();
+                dvGrade.Formula.ExcelFormula = $"=IF(L{r}<>\"\",INDIRECT(VLOOKUP(L{r},ThangLuongData,3,FALSE)),\"\")";
+
+                var dvLevel = ws.Cells[r, 14, r, 14].DataValidation.AddListDataValidation();
+                dvLevel.Formula.ExcelFormula = $"=IF(M{r}<>\"\",INDIRECT(VLOOKUP(M{r},NgachLuongData,4,FALSE)),\"\")";
+
+                ws.Cells[r, 1].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachCodeId, 3, FALSE))";
+                ws.Cells[r, 3].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachNhanVien, 2, FALSE))";
+                ws.Cells[r, 26].Formula = $"=IF(D{r}=\"\", \"\", VLOOKUP(D{r}, DanhSachLoaiQuyetDinhRange, 2, FALSE))";
+                ws.Cells[r, 27].Formula = $"=IF(I{r}=\"\", \"\", VLOOKUP(I{r}, DanhSachPhongBanRange, 2, FALSE))";
+                ws.Cells[r, 28].Formula = $"=IF(J{r}=\"\", \"\", VLOOKUP(J{r}, DanhSachChucDanhRange, 2, FALSE))";
+            }
+
+            ws.Column(1).Hidden = true;
+            ws.Column(26).Hidden = true;
+            ws.Column(27).Hidden = true;
+            ws.Column(28).Hidden = true;
+
+            package.SaveAs(new FileInfo(releasePath));
+        }
+        return Ok(new { message = "Base template generated successfully." });
+    }
+
+    [HttpGet("export")]
+    public IActionResult Export()
+    {
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        var releasePath = Path.Combine(_environment.ContentRootPath, _templateFolderName, _releaseTemplateName);
+        
+        if (!System.IO.File.Exists(releasePath)) return BadRequest("Vui lòng chạy generate-template trước.");
+
+        using (var package = new ExcelPackage(new FileInfo(releasePath)))
+        {
+            var ws = package.Workbook.Worksheets[0];
+            var lookup = package.Workbook.Worksheets["Data_Lookup"];
+            var wb = package.Workbook;
+
+            // 1. Điền dữ liệu Nhân viên
             var emps = AppDataContext.Employees
                 .Join(AppDataContext.EmployeeCvs, e => e.EmployeeId, c => c.Id,
                     (e, c) => new { e.Code, c.FullName, e.Id })
                 .OrderBy(x => x.Code)
                 .ToList();
-
             for (int i = 0; i < emps.Count; i++)
             {
                 lookup.Cells[i + 2, 1].Value = emps[i].Code;
@@ -63,250 +160,69 @@ public class HuWorkingController : ControllerBase
                 lookup.Cells[i + 2, 3].Value = emps[i].Id;
             }
 
-            // TYPE_DECISION (Loại Quyết Định) -> Name (D), Id (E)
-            var decisions = AppDataContext.SysOtherLists
-                .Where(s => s.TypeCode == "TYPE_DECISION")
-                .OrderBy(s => s.Name)
-                .ToList();
-            for (int i = 0; i < decisions.Count; i++)
-            {
-                lookup.Cells[i + 2, 4].Value = decisions[i].Name;
-                lookup.Cells[i + 2, 5].Value = decisions[i].Id;
-            }
+            // 2. Điền dữ liệu Danh mục động
+            var decisions = AppDataContext.SysOtherLists.Where(s => s.TypeCode == "TYPE_DECISION").OrderBy(s => s.Name).ToList();
+            for (int i = 0; i < decisions.Count; i++) { lookup.Cells[i + 2, 4].Value = decisions[i].Name; lookup.Cells[i + 2, 5].Value = decisions[i].Id; }
 
-            // Phòng ban (F, G)
             var depts = AppDataContext.Departments.OrderBy(d => d.Name).ToList();
-            for (int i = 0; i < depts.Count; i++)
-            {
-                lookup.Cells[i + 2, 6].Value = depts[i].Name;
-                lookup.Cells[i + 2, 7].Value = depts[i].Id;
-            }
+            for (int i = 0; i < depts.Count; i++) { lookup.Cells[i + 2, 6].Value = depts[i].Name; lookup.Cells[i + 2, 7].Value = depts[i].Id; }
 
-            // Chức danh (H, I)
             var positions = AppDataContext.Positions.OrderBy(p => p.Name).ToList();
-            for (int i = 0; i < positions.Count; i++)
-            {
-                lookup.Cells[i + 2, 8].Value = positions[i].Name;
-                lookup.Cells[i + 2, 9].Value = positions[i].Id;
-            }
+            for (int i = 0; i < positions.Count; i++) { lookup.Cells[i + 2, 8].Value = positions[i].Name; lookup.Cells[i + 2, 9].Value = positions[i].Id; }
 
-            var wb = package.Workbook;
-            // --- Employee ---
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachCode", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachCode");
-            if (emps.Any()) wb.Names.Add("DanhSachCode", lookup.Cells[2, 1, 1 + emps.Count, 1]);
-
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachNhanVien", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachNhanVien");
-            wb.Names.Add("DanhSachNhanVien", lookup.Cells["A2:B1000"]);
-
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachCodeId", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachCodeId");
-            wb.Names.Add("DanhSachCodeId", lookup.Cells["A2:C1000"]);
-
-            // --- TYPE_DECISION ---
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinh", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachLoaiQuyetDinh");
-            if (decisions.Any()) wb.Names.Add("DanhSachLoaiQuyetDinh", lookup.Cells[2, 4, 1 + decisions.Count, 4]);
-            
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachLoaiQuyetDinhRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachLoaiQuyetDinhRange");
-            wb.Names.Add("DanhSachLoaiQuyetDinhRange", lookup.Cells["D2:E1000"]);
-
-            // --- PHONG_BAN ---
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachPhongBan", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachPhongBan");
-            if (depts.Any()) wb.Names.Add("DanhSachPhongBan", lookup.Cells[2, 6, 1 + depts.Count, 6]);
-
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachPhongBanRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachPhongBanRange");
-            wb.Names.Add("DanhSachPhongBanRange", lookup.Cells["F2:G1000"]);
-
-            // --- CHUC_DANH ---
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachChucDanh", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachChucDanh");
-            if (positions.Any()) wb.Names.Add("DanhSachChucDanh", lookup.Cells[2, 8, 1 + positions.Count, 8]);
-
-            if (wb.Names.Any(n => n.Name.Equals("DanhSachChucDanhRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("DanhSachChucDanhRange");
-            wb.Names.Add("DanhSachChucDanhRange", lookup.Cells["H2:I1000"]);
-
-            // Thêm dữ liệu cho Thang, Ngạch, Bậc lương
+            // 3. Điền dữ liệu Danh mục Lương và Tạo Named Range Động
             var salaryScales = AppDataContext.SalaryScales.OrderBy(s => s.Name).ToList();
             for (int i = 0; i < salaryScales.Count; i++)
             {
                 lookup.Cells[i + 2, 10].Value = salaryScales[i].Name;
                 lookup.Cells[i + 2, 11].Value = salaryScales[i].Id;
+                lookup.Cells[i + 2, 12].Value = "SCALE_" + salaryScales[i].Code.Replace(" ", "_");
             }
 
             var salaryGrades = AppDataContext.SalaryGrades.OrderBy(g => g.Name).ToList();
             for (int i = 0; i < salaryGrades.Count; i++)
             {
-                lookup.Cells[i + 2, 12].Value = salaryGrades[i].Name;
-                lookup.Cells[i + 2, 13].Value = salaryGrades[i].Id;
-                lookup.Cells[i + 2, 14].Value = salaryGrades[i].PaSalaryScaleId;
+                lookup.Cells[i + 2, 13].Value = salaryGrades[i].Name;
+                lookup.Cells[i + 2, 14].Value = salaryGrades[i].Id;
+                lookup.Cells[i + 2, 15].Value = salaryGrades[i].PaSalaryScaleId;
+                lookup.Cells[i + 2, 16].Value = "GRADE_" + salaryGrades[i].Code.Replace(" ", "_");
             }
 
             var salaryLevels = AppDataContext.SalaryLevels.OrderBy(l => l.Name).ToList();
             for (int i = 0; i < salaryLevels.Count; i++)
             {
-                lookup.Cells[i + 2, 15].Value = salaryLevels[i].Name;
-                lookup.Cells[i + 2, 16].Value = salaryLevels[i].Id;
-                lookup.Cells[i + 2, 17].Value = salaryLevels[i].PaSalaryGradeId;
+                lookup.Cells[i + 2, 18].Value = salaryLevels[i].Name;
+                lookup.Cells[i + 2, 19].Value = salaryLevels[i].Id;
+                lookup.Cells[i + 2, 20].Value = salaryLevels[i].PaSalaryGradeId;
             }
 
-            // Named ranges cho Thang, Ngạch, Bậc lương
-            if (wb.Names.Any(n => n.Name.Equals("ThangLuong", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("ThangLuong");
-            if (salaryScales.Any()) wb.Names.Add("ThangLuong", lookup.Cells[2, 10, 1 + salaryScales.Count, 10]);
-            if (wb.Names.Any(n => n.Name.Equals("ThangLuongRange", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("ThangLuongRange");
-            wb.Names.Add("ThangLuongRange", lookup.Cells["J2:K1000"]);
-
-            // Tạo Named Range động cho Ngạch lương và Bậc lương
-            // Lưu trữ vào các cột riêng trong sheet Data_Lookup
-            // Cột 20: Name ngạch, Cột 21: Id ngạch, Cột 22: ScaleId
-            // Cột 23: Name bậc, Cột 24: Id bậc, Cột 25: GradeId
-            int gradeCol = 20;
-            int levelCol = 23;
-            var scaleGrades = salaryGrades.GroupBy(g => g.PaSalaryScaleId).ToList();
-            int gradeRow = 0;
-            foreach (var group in scaleGrades)
+            // Tạo Named Range động cho Ngạch lương và Bậc lương dựa trên dữ liệu vừa nạp
+            foreach (var scale in salaryScales)
             {
-                var scale = salaryScales.FirstOrDefault(s => s.Id == group.Key);
-                if (scale == null) continue;
-
-                var grades = group.OrderBy(g => g.Name).ToList();
-                if (!grades.Any()) continue;
-
-                int startRow = 2 + gradeRow;
-                foreach (var grade in grades)
+                var gradesOfScale = salaryGrades.Where(g => g.PaSalaryScaleId == scale.Id).ToList();
+                if (gradesOfScale.Any())
                 {
-                    lookup.Cells[2 + gradeRow, gradeCol].Value = grade.Name;
-                    lookup.Cells[2 + gradeRow, gradeCol + 1].Value = grade.Id;
-                    lookup.Cells[2 + gradeRow, gradeCol + 2].Value = grade.PaSalaryScaleId;
-                    gradeRow++;
+                    var rangeName = "Ngach_" + scale.Name.Replace(" ", "_");
+                    if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
+                    
+                    var firstGrade = gradesOfScale.First();
+                    var startRow = 2 + salaryGrades.IndexOf(firstGrade);
+                    wb.Names.Add(rangeName, lookup.Cells[startRow, 13, startRow + gradesOfScale.Count - 1, 13]);
                 }
-                int endRow = startRow + grades.Count - 1;
-
-                // Tạo named range cho INDIRECT dropdown (Ngach_{TenThang})
-                var rangeName = "Ngach_" + scale.Name.Replace(" ", "_");
-                if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
-                // Named range chỉ chứa cột Name (cột đầu tiên) để dropdown hiển thị đúng
-                wb.Names.Add(rangeName, lookup.Cells[startRow, gradeCol, endRow, gradeCol]);
             }
 
-            // Lưu trữ Bậc lương
-            var gradeLevels = salaryLevels.GroupBy(l => l.PaSalaryGradeId).ToList();
-            int levelRow = 0;
-            foreach (var group in gradeLevels)
+            foreach (var grade in salaryGrades)
             {
-                var grade = salaryGrades.FirstOrDefault(g => g.Id == group.Key);
-                if (grade == null) continue;
-
-                var levels = group.OrderBy(l => l.Name).ToList();
-                if (!levels.Any()) continue;
-
-                int startRow = 2 + levelRow;
-                foreach (var level in levels)
+                var levelsOfGrade = salaryLevels.Where(l => l.PaSalaryGradeId == grade.Id).ToList();
+                if (levelsOfGrade.Any())
                 {
-                    lookup.Cells[2 + levelRow, levelCol].Value = level.Name;
-                    lookup.Cells[2 + levelRow, levelCol + 1].Value = level.Id;
-                    lookup.Cells[2 + levelRow, levelCol + 2].Value = level.PaSalaryGradeId;
-                    levelRow++;
+                    var rangeName = "Bac_" + grade.Name.Replace(" ", "_");
+                    if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
+
+                    var firstLevel = levelsOfGrade.First();
+                    var startRow = 2 + salaryLevels.IndexOf(firstLevel);
+                    wb.Names.Add(rangeName, lookup.Cells[startRow, 18, startRow + levelsOfGrade.Count - 1, 18]);
                 }
-                int endRow = startRow + levels.Count - 1;
-
-                // Tạo named range cho INDIRECT dropdown (Bac_{TenNgach})
-                var rangeName = "Bac_" + grade.Name.Replace(" ", "_");
-                if (wb.Names.Any(n => n.Name.Equals(rangeName, StringComparison.OrdinalIgnoreCase))) wb.Names.Remove(rangeName);
-                wb.Names.Add(rangeName, lookup.Cells[startRow, levelCol, endRow, levelCol]);
-            }
-
-            if (wb.Names.Any(n => n.Name.Equals("NgachLuongAll", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("NgachLuongAll");
-            if (gradeRow > 0) wb.Names.Add("NgachLuongAll", lookup.Cells[2, gradeCol, 1 + gradeRow, gradeCol + 2]);
-
-            if (wb.Names.Any(n => n.Name.Equals("BacLuongAll", StringComparison.OrdinalIgnoreCase))) wb.Names.Remove("BacLuongAll");
-            if (levelRow > 0) wb.Names.Add("BacLuongAll", lookup.Cells[2, levelCol, 1 + levelRow, levelCol + 2]);
-
-            var dv = ws.Cells[6, 2, 100, 2].DataValidation.AddListDataValidation();
-            dv.Formula.ExcelFormula = "=DanhSachCode";
-            dv.AllowBlank = true;
-            dv.ErrorTitle = "Giá trị không hợp lệ";
-            dv.Error = "Vui lòng chọn giá trị có trong danh sách.";
-
-            // Dropdown Loại Quyết Định ở cột D
-            var dvDecision = ws.Cells[6, 4, 100, 4].DataValidation.AddListDataValidation();
-            dvDecision.Formula.ExcelFormula = "=DanhSachLoaiQuyetDinh";
-            dvDecision.AllowBlank = true;
-            dvDecision.ErrorTitle = "Giá trị không hợp lệ";
-            dvDecision.Error = "Vui lòng chọn giá trị có trong danh sách.";
-
-            // Dropdown Phòng Ban ở cột I
-            var dvDept = ws.Cells[6, 9, 100, 9].DataValidation.AddListDataValidation();
-            dvDept.Formula.ExcelFormula = "=DanhSachPhongBan";
-            dvDept.AllowBlank = true;
-
-            // Dropdown Chức Danh ở cột J
-            var dvPos = ws.Cells[6, 10, 100, 10].DataValidation.AddListDataValidation();
-            dvPos.Formula.ExcelFormula = "=DanhSachChucDanh";
-            dvPos.AllowBlank = true;
-
-            // Dropdown cho Thang, Ngạch, Bậc lương
-            var dvScale = ws.Cells[6, 12, 100, 12].DataValidation.AddListDataValidation();
-            dvScale.Formula.ExcelFormula = "=ThangLuong";
-            dvScale.AllowBlank = true;
-
-            // Dropdown Ngạch lương - phải set formula cho từng row vì cần relative reference
-            for (int r = 6; r <= 100; r++)
-            {
-                var dvGrade = ws.Cells[r, 13, r, 13].DataValidation.AddListDataValidation();
-                dvGrade.Formula.ExcelFormula = $"=IF(L{r}<>\"\",INDIRECT(\"Ngach_\" & SUBSTITUTE(L{r},\" \",\"_\")),\"\")";
-                dvGrade.AllowBlank = true;
-
-                var dvLevel = ws.Cells[r, 14, r, 14].DataValidation.AddListDataValidation();
-                dvLevel.Formula.ExcelFormula = $"=IF(M{r}<>\"\",INDIRECT(\"Bac_\" & SUBSTITUTE(M{r},\" \",\"_\")),\"\")";
-                dvLevel.AllowBlank = true;
-            }
-
-            for (int r = 6; r <= 100; r++)
-            {
-                // Cột A (1): ID nhân viên ẩn từ dropdown Mã NV (cột B)
-                ws.Cells[r, 1].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachCodeId, 3, FALSE))";
-                // Cột C (3): Tên nhân viên từ dropdown Mã NV (cột B)
-                ws.Cells[r, 3].Formula = $"=IF(B{r}=\"\", \"\", VLOOKUP(B{r}, DanhSachNhanVien, 2, FALSE))";
-
-                // Các cột ẩn chứa ID bắt đầu từ cột Z (26) để không ảnh hưởng cột hiển thị
-                // Cột 26 (Z): ID Loại QĐ ẩn từ dropdown (cột D)
-                ws.Cells[r, 26].Formula = $"=IF(D{r}=\"\", \"\", VLOOKUP(D{r}, DanhSachLoaiQuyetDinhRange, 2, FALSE))";
-                // Cột 27 (AA): ID Phòng ban ẩn từ dropdown (cột I)
-                ws.Cells[r, 27].Formula = $"=IF(I{r}=\"\", \"\", VLOOKUP(I{r}, DanhSachPhongBanRange, 2, FALSE))";
-                // Cột 28 (AB): ID Chức danh ẩn từ dropdown (cột J)
-                ws.Cells[r, 28].Formula = $"=IF(J{r}=\"\", \"\", VLOOKUP(J{r}, DanhSachChucDanhRange, 2, FALSE))";
-                // Cột 29 (AC): ID Thang lương ẩn từ dropdown (cột L)
-                ws.Cells[r, 29].Formula = $"=IF(L{r}=\"\", \"\", VLOOKUP(L{r}, ThangLuongRange, 2, FALSE))";
-                // Cột 30 (AD): ID Ngạch lương ẩn từ dropdown (cột M)
-                ws.Cells[r, 30].Formula = $"=IF(M{r}=\"\", \"\", VLOOKUP(M{r}, NgachLuongAll, 2, FALSE))";
-                // Cột 31 (AE): ID Bậc lương ẩn từ dropdown (cột N)
-                ws.Cells[r, 31].Formula = $"=IF(N{r}=\"\", \"\", VLOOKUP(N{r}, BacLuongAll, 2, FALSE))";
-                // Cột 32 (AF): ID Người ký ẩn từ dropdown (cột P)
-                ws.Cells[r, 32].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachCodeId, 3, FALSE))";
-
-                // Cột Q (17): Tên người ký từ dropdown Mã người ký (cột P)
-                ws.Cells[r, 17].Formula = $"=IF(P{r}=\"\", \"\", VLOOKUP(P{r}, DanhSachNhanVien, 2, FALSE))";
-            }
-            // Ẩn các cột ID
-            ws.Column(1).Hidden = true;   // A: ID Nhân viên
-            ws.Column(26).Hidden = true;  // Z: ID Loại QĐ
-            ws.Column(27).Hidden = true;  // AA: ID Phòng ban
-            ws.Column(28).Hidden = true;  // AB: ID Chức danh
-            ws.Column(29).Hidden = true;  // AC: ID Thang lương
-            ws.Column(30).Hidden = true;  // AD: ID Ngạch lương
-            ws.Column(31).Hidden = true;  // AE: ID Bậc lương
-            ws.Column(32).Hidden = true;  // AF: ID Người ký
-
-            // Dropdown Mã người ký ở cột P
-            var dvSigner = ws.Cells[6, 16, 100, 16].DataValidation.AddListDataValidation();
-            dvSigner.Formula.ExcelFormula = "=DanhSachCode";
-            dvSigner.AllowBlank = true;
-            dvSigner.ErrorTitle = "Giá trị không hợp lệ";
-            dvSigner.Error = "Vui lòng chọn giá trị có trong danh sách.";
-
-            var toRemove = ws.DataValidations
-                .Where(v => v.Address.Start.Column >= 5 && v.Address.End.Column <= 8)
-                .ToList();
-            foreach (var v in toRemove)
-            {
-                ws.DataValidations.Remove(v);
             }
 
             return File(package.GetAsByteArray(),
